@@ -1,0 +1,88 @@
+@using ChatbotApi.Application.View.Queries.GetTopMenuInfoQuery
+@model TopMenuInfoViewModel
+@inject ILocalizerService L
+@{
+    ViewBag.Title = "ข้อมูลบัญชี";
+    Layout = "Argon";
+}
+
+
+<div class="col-12">
+    <div class="card">
+        <div class="container-fluid h-100">
+            <div class="row h-100 justify-content-center align-items-center">
+                <div class="col-12 col-md-6">
+                    <!-- Responsive Table -->
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                            <tr>
+                                <td colspan="2" class="text-center pt-4">
+                                    <h1>ข้อมูลบัญชี</h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>@(PropertyHelper<TopMenuInfoViewModel>.GetDisplayName(m => m.Email, L))</td>
+                                <td>@Model.Email</td>
+                            </tr>
+                            <tr>
+                                <td>@(PropertyHelper<TopMenuInfoViewModel>.GetDisplayName(m => m.Name, L))</td>
+                                <td>@Model.Name</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // Initialize tooltip
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        // Function to handle copy or share
+        function handleCopyOrShare(copyTargetId, copyLinkId) {
+            var copyText = document.getElementById(copyTargetId).value;
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile && navigator.share) {
+                // Use Web Share API on mobile devices
+                navigator.share({
+                    title: 'Share Link',
+                    text: 'Check out this link:',
+                    url: copyText
+                }).then(function() {
+                    console.log('Successfully shared');
+                }).catch(function(err) {
+                    console.error('Error sharing:', err);
+                });
+            } else {
+                // Use clipboard API on non-mobile devices
+                navigator.clipboard.writeText(copyText).then(function() {
+                    var tooltip = bootstrap.Tooltip.getInstance(document.getElementById(copyLinkId));
+                    tooltip.setContent({ '.tooltip-inner': 'คัดลอกแล้ว!' });
+                    setTimeout(() => {
+                        tooltip.setContent({ '.tooltip-inner': 'คลิกเพื่อคัดลอก' });
+                    }, 2000);
+                }, function(err) {
+                    console.error('Async: Could not copy text: ', err);
+                });
+            }
+        }
+
+        // Event listener for copy link
+        document.getElementById('copyLink').addEventListener('click', function (e) {
+            e.preventDefault();
+            handleCopyOrShare('copyTarget', 'copyLink');
+        });
+    });
+</script>
+}

@@ -1,0 +1,110 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery
+@model List<ChatbotApi.Application.Chatbots.Queries.GetMemoryFileQuery.MemoryFileViewModel>
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "จัดการไฟล์ความจำ";
+    var info = (ViewData["Info"] as ChatbotSingleViewModel)!;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>@ViewData["Title"]</h6>
+                        <a class="btn btn-sm bg-gradient-info" 
+                           asp-controller="Chatbots" 
+                           asp-action="Memory" 
+                           asp-route-Id="@info.Id">
+                           กลับไปหน้าความจำ
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่อไฟล์</th>
+                                        <th>จำนวนข้อมูล</th>
+                                        <th>การดำเนินการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var file in Model)
+                                    {
+                                        <tr>
+                                            <td>@file.FileName</td>
+                                            <td>@file.EntryCount</td>
+                                            <td>
+                                                <button type="button" 
+                                                        class="btn btn-sm bg-gradient-warning me-2" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#editModal-@file.FileHash">
+                                                    แก้ไขชื่อ
+                                                </button>
+                                                
+                                                <form method="post" 
+                                                      asp-action="DeleteMemoryFile" asp-route-id="@info.Id"
+                                                      style="display: inline-block;">
+                                                    <input type="hidden" name="ChatBotId" value="@info.Id" />
+                                                    <input type="hidden" name="fileHash" value="@file.FileHash" />
+                                                    <button type="submit" 
+                                                            class="btn btn-sm bg-gradient-danger"
+                                                            onclick="return confirm('ยืนยันการลบไฟล์และข้อมูลทั้งหมด?')">
+                                                        ลบ
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        
+                                        <!-- Edit Modal -->
+                                        <div class="modal fade" id="editModal-@file.FileHash" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">แก้ไขชื่อไฟล์</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <form method="post" asp-action="EditMemoryFileName" asp-route-id="@info.Id">
+                                                        <div class="modal-body">
+                                                            <input type="hidden" name="ChatBotId" value="@info.Id" />
+                                                            <input type="hidden" name="originalFileName" value="@file.FileName" />
+                                                            
+                                                            <div class="form-group">
+                                                                <label>ชื่อไฟล์ใหม่</label>
+                                                                <input type="text" 
+                                                                       class="form-control" 
+                                                                       name="newFileName" 
+                                                                       value="@file.FileName" 
+                                                                       required />
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                                                            <button type="submit" class="btn btn-primary">บันทึก</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">ยังไม่มีไฟล์ที่อัปโหลด</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

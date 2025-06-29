@@ -1,0 +1,14 @@
+@model ValueTuple<string, string, DateOnly?>
+
+@{
+    var propertyName = Model.Item1;
+    var propertyText = Model.Item2;
+    var dateValue = Model.Item3;
+    var formattedDate = dateValue?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("th-TH"));
+}
+
+<div class="col-md-4 col-sm-12">
+    <label for="@propertyName">@propertyText</label>
+    <input class="form-control" name="@propertyName" type="text" data-provide="datepicker" data-date-language="th-th" data-date-format="dd/mm/yyyy"
+           value="@formattedDate">
+</div>

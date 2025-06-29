@@ -1,0 +1,87 @@
+@using ChatbotApi.Application.Chatbots.Commands.CreatePreMessageCommand
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery
+@using ChatbotApi.Application.Chatbots.Queries.GetPluginByChatBotQuery
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model CreatePreMessageCommand
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "เพิ่มความรู้ของบอทใหม่";
+    var info = (ViewData["Info"] as ChatbotSingleViewModel)!;
+    var delegateModel = new CreatePreMessageCommand();
+    if (Model != null)
+    {
+        delegateModel = Model;
+    }
+
+    var plugins = ViewData["Plugins"] as List<PluginViewModel> ?? new List<PluginViewModel>();
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-start gx-2">
+                        <i class="material-icons pt-2">add</i>
+                        <h6>
+                            @ViewData["Title"]
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-controller="Chatbots" asp-action="AddMemory" asp-route-Id="@info.Id">
+                        <input type="hidden" name="Id" value="@info.Id"/>
+                        <partial name="InputEditText"
+                                 model="@("Order", PropertyHelper<CreatePreMessageCommand>.GetDisplayName(m => m.Order, L), delegateModel.Order.ToString())"/>
+
+                        <partial name="InputEditTextArea"
+                                 model="@("UserMessage", PropertyHelper<CreatePreMessageCommand>.GetDisplayName(m => m.UserMessage, L), delegateModel.UserMessage, 15)"/>
+                        <p id="userMessageCharCount">จำนวนตัวอักษร: 0/8000</p>
+
+                        <partial name="InputEditCheckBox"
+                                 model="@("IsRequired", PropertyHelper<CreatePreMessageCommand>.GetDisplayName(m => m.IsRequired, L), delegateModel.IsRequired)"/>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-responsive-sm bg-gradient-success me-2 mb-1">เพิ่ม
+                            </button>
+                            <button type="reset" class="btn btn-responsive-sm bg-gradient-info mb-1 me-2">
+                                ป้อนข้อมูลใหม่
+                            </button>
+                            <a class="btn btn-responsive-sm bg-gradient-secondary mb-1 me-2" asp-controller="Chatbots"
+                               asp-route-Id="@info.Id" asp-action="Memory">ย้อนกลับ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(".form-select").select2({
+            theme: "bootstrap-5",
+            width: "100%",
+            allowClear: true,
+            placeholder: "เลือก",
+
+        });
+    </script>
+    <script>
+        const userMessage = document.getElementById("UserMessage");
+        const charCount = document.getElementById("userMessageCharCount");
+
+        userMessage.addEventListener("input", function () {
+            charCount.textContent = `จำนวนตัวอักษร: ${userMessage.value.length}/8000`;
+
+            if (length > 8000) {
+                charCount.classList.add("text-danger");
+            } else {
+                charCount.classList.remove("text-danger");
+            }
+        });
+
+    </script>
+}

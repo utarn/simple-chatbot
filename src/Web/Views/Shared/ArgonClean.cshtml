@@ -1,0 +1,72 @@
+@using ChatbotApi.Application.View.Queries.GetTopMenuInfoQuery
+@inject ISender Sender
+@{
+    // var info = await Sender.Send(new GetTopMenuInfoQuery());
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <title>
+        @ViewData["Title"] - Chatbot System
+    </title>
+    <partial name="_ArgonHeadSection"/>
+</head>
+
+<body class="g-sidenav-show bg-gray-100">
+
+<script>  
+    function getOperatingSystem() {
+        var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    
+        // Check for iOS
+        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+            return 'iOS';
+        }
+        // Check for Android
+        else if (/android/i.test(userAgent)) {
+            return 'Android';
+        }
+        // Default to 'unknown' if we can't determine
+        return 'unknown';
+    }
+    function openInDefaultBrowser() {
+        var userAgent = navigator.userAgent;
+        var isFacebookIAB = userAgent.includes('FBAN') || userAgent.includes('FBAV');
+        var isLineIAB = userAgent.includes('Line');
+
+        if (isFacebookIAB || isLineIAB) {
+            let os = getOperatingSystem();
+            if (os === "Android") {
+                window.location = "intent:" + window.location.href + "#Intent;end";
+            }
+        }
+    }
+
+    // Call the function when the page loads
+    openInDefaultBrowser();
+</script>
+
+<div class="min-height-300 bg-primary position-absolute w-100"></div>
+<main class="main-content position-relative border-radius-lg ">
+    <!-- Navbar -->
+    <nav class="navbar navbar-main navbar-expand-lg  px-0 mx-4 shadow-none border-radius-xl z-index-sticky " id="navbarBlur" data-scroll="false">
+        <div class="container-fluid py-1 px-0">
+        </div>
+    </nav>
+    <!-- End Navbar -->
+    <div class="container-fluid py-4 px-0">
+        @RenderBody()
+
+        <partial name="_ArgonFooter"/>
+    </div>
+</main>
+
+<partial name="_ArgonBottomScript"/>
+
+@(await RenderSectionAsync("Scripts", false))
+
+</body>
+
+</html>

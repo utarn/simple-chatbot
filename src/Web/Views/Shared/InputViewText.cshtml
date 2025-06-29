@@ -1,0 +1,14 @@
+@model ValueTuple<string, string, string?>
+@{
+    var propertyName = Model.Item1;
+    var propertyText = Model.Item2;
+    var stringValue = Model.Item3;
+}
+
+
+<div class="col-md-4 col-sm-12">
+    <label for="@propertyName">@propertyText</label>
+    <input class="form-control" type="text" name="@propertyName" id="@propertyName"
+           placeholder="@propertyText"
+           aria-label="@propertyName" value="@stringValue">
+</div>

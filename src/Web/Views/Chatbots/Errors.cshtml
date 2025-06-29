@@ -1,0 +1,149 @@
+@using ChatbotApi.Application.Chatbots.Queries.GetErrorsQuery
+@model List<ErrorViewModel>
+@inject ILocalizerService L
+
+@{
+    ViewData["Title"] = "รายการข้อผิดพลาดจากระบบ";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex justify-content-start gx-2">
+                    <i class="material-icons pb-2">error</i>
+                    <h6>
+                        @ViewData["Title"]
+                    </h6>
+                    <a asp-action="Memory" asp-route-Id="@ViewData["Id"]" class="btn btn-sm bg-gradient-primary ms-auto">
+                        <i class="material-icons">arrow_back</i> ย้อนกลับ
+                    </a>
+                </div>
+            </div>
+            <div class="card-body m-0">
+                <div class="table-responsive" id="listTable">
+                    <table class="table">
+                        <thead>
+                        <tr role="row">
+                            <th>
+                                @(PropertyHelper<ErrorViewModel>.GetDisplayName(m => m.Type, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<ErrorViewModel>.GetDisplayName(m => m.Created, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<ErrorViewModel>.GetDisplayName(m => m.FileName, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<ErrorViewModel>.GetDisplayName(m => m.Url, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<ErrorViewModel>.GetDisplayName(m => m.UseCag, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<ErrorViewModel>.GetDisplayName(m => m.ExceptionMessage, L))
+                            </th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr role="row">
+                                <td>
+                                    @(item.Type == "ImportError" ? "ปัญหานำเข้า" : "รีเฟรชข้อมูล")
+                                </td>
+                                <td>
+                                    @item.Created.ToString("dd/MM/yyyy HH:mm:ss", CultureInfo.GetCultureInfo("th-TH"))
+                                </td>
+                                <td>
+                                    @item.FileName
+                                </td>
+                                <td>
+                                    @item.Url
+                                </td>
+                                <td>
+                                    @(item.UseCag.HasValue ? (item.UseCag.Value ? "ใช่" : "ไม่") : "")
+                                </td>
+                                <td>
+                                    @item.ExceptionMessage
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm bg-gradient-danger"
+                                            onclick="dismissError(@item.Id)">
+                                        ปิด
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function dismissError(id) {
+            bootbox.confirm({
+                title: "ยืนยันการปิดข้อผิดพลาด",
+                message: "คุณแน่ใจหรือไม่ว่าต้องการปิดข้อผิดพลาดนี้?",
+                buttons: {
+                    cancel: {
+                        label: 'ยกเลิก',
+                        className: 'btn-secondary'
+                    },
+                    confirm: {
+                        label: 'ปิด',
+                        className: 'btn-danger'
+                    }
+                },
+                callback: function (result) {
+                    if (result) {
+                        fetch('/Chatbots/DismissError', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ id })
+                        }).then(response => {
+                            if (response.ok) {
+                                fetch('/Chatbots/Errors?Id=@ViewData["Id"]')
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        const parser = new DOMParser();
+                                        const doc = parser.parseFromString(html, 'text/html');
+                                        const newTable = doc.getElementById('listTable');
+                                        if (newTable) {
+                                            document.getElementById('listTable').replaceWith(newTable);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        bootbox.alert({
+                                            title: "เกิดข้อผิดพลาด",
+                                            message: "ไม่สามารถโหลดข้อมูลใหม่ได้",
+                                            className: 'bootbox-sm'
+                                        });
+                                    });
+                            } else {
+                                bootbox.alert({
+                                    title: "เกิดข้อผิดพลาด",
+                                    message: "ไม่สามารถปิดข้อผิดพลาดได้",
+                                    className: 'bootbox-sm'
+                                });
+                            }
+                        }).catch(error => {
+                            bootbox.alert({
+                                title: "เกิดข้อผิดพลาด",
+                                message: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้",
+                                className: 'bootbox-sm'
+                            });
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+}

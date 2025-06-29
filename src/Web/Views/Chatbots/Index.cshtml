@@ -1,0 +1,335 @@
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotQuery
+@model PaginatedList<ChatbotViewModel, ChatbotMetadata>
+@inject ILocalizerService L
+@inject ISystemService S
+@inject ICurrentUserService C
+@inject IAuthorizationService A
+@inject IMediator Mediator
+@{
+    ViewData["Title"] = "รายการแชทบอท";
+    var success = (bool?)ViewData["Success"];
+    var deleteSuccess = (bool?)ViewData["DeleteSuccess"];
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="mb-3 text-white">
+            <i class="border-radius-lg shadow-sm material-icons">search</i> @ViewData["Title"]
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="accordion accordion-flush mb-3" id="searchHeader">
+        <div class="accordion-item">
+            <h2 class="accordion-header bg-white rounded-4" id="flush-headingOne">
+                <button class="accordion-button showing" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                    <div class="d-flex align-items-center w-100">
+                        <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                            <i class="ni ni-zoom-split-in opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <div class="ms-3">
+                            <p class="text-sm mb-0 text-uppercase font-weight-bold">เครื่องมือ</p>
+                            <h5 class="font-weight-bolder mb-0">
+                                การค้นหา
+                            </h5>
+                        </div>
+                        <div class="ms-auto">
+                            <i class="fa-solid fa-angles-down accordion-icon-collapse"></i>
+                            <i class="fa-solid fa-angles-up accordion-icon-expand"></i>
+                        </div>
+                    </div>
+                </button>
+            </h2>
+            <div id="flush-collapseOne" class="accordion-collapse show mt-2" aria-labelledby="flush-headingOne"
+                 data-bs-parent="#searchHeader">
+                <div class="card px-1">
+                    <form id="searchForm">
+                        <input type="hidden" name="PageSize" value="@Model.PageSize"/>
+                        <input type="hidden" name="Page" value="1"/>
+                        <div class="row gx-2">
+                            <partial name="InputViewText"
+                                     model="@("Name", PropertyHelper<ChatbotMetadata>.GetDisplayName(m => m.Name, L), Model.Metadata?.Name)"/>
+
+                            <div class="col-md-4 col-sm-12">
+                                <label class="invisible">button</label>
+                                <input type="button" class="btn bg-gradient-secondary form-control" value="ล้างเงื่อนไข"
+                                       onclick="restoreSearch()"/>
+                            </div>
+                            <div class="col-md-4 col-sm-12">
+                                <label class="invisible">button</label>
+                                <input type="button" class="btn bg-gradient-primary form-control" value="ค้นหา"
+                                       onclick="updateSearch()"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row" id="contentBody">
+    <div class="col-12">
+
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex gx-2">
+                    <i class="material-icons pb-2">person</i>
+                    <h6>
+                        @ViewData["Title"]
+                    </h6>
+                    <a asp-controller="Chatbots" asp-action="Create"
+                       class="btn btn-sm bg-gradient-info ms-auto me-2 mt-2">
+                        <i class="material-icons">person_add</i> เพิ่มบอท
+                    </a>
+                </div>
+            </div>
+            <div class="card-body m-0" id="body">
+                @if (success != null)
+                {
+                    @if (success.Value)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show d-flex" role="alert">
+                            เพิ่มบอทสำเร็จ
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
+                            ไม่สามารถเพิ่มบอทได้
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                }
+                @if (deleteSuccess != null)
+                {
+                    @if (deleteSuccess.Value)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show d-flex" role="alert">
+                            ลบบอทสำเร็จ
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
+                            ไม่สามารถลบบอทได้
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                }
+                <div class="table-responsive" style="min-height: 300px;">
+                    <table class="table">
+                        <thead>
+                        <tr role="row">
+                            <th>
+                                @(PropertyHelper<ChatbotViewModel>.GetDisplayName(m => m.Name, L))
+                            </th>
+                            <th>
+                                ลิงก์ Webhook
+                            </th>
+                            <th>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr role="row">
+                                <td>
+                                    @item.Name
+                                </td>
+                                <td>
+                                    @if (item.LineChannelAccessToken != null)
+                                    {
+                                        <a href="#" id="lineCopyLink-@item.Id" data-bs-toggle="tooltip"
+                                           data-id="@item.Id"
+                                           data-bs-placement="top" title="คลิกเพื่อคัดลอก">
+                                            <img src="~/image/line.svg" alt="Line" width="30" height="30"/>
+                                        </a>
+                                        <input type="text" id="lineCopyTarget-@item.Id"
+                                               value="@(S.FullHostName + "/webhook/line/" + item.Id)" hidden/>
+                                    }
+                                    @if (item.GoogleChatServiceAccount != null)
+                                    {
+                                        <a href="#" id="googleCopyLink-@item.Id" data-bs-toggle="tooltip"
+                                           data-id="@item.Id" data-bs-placement="top" title="คลิกเพื่อคัดลอก">
+                                            <img src="~/image/google_chat.svg" alt="Google" width="30" height="30"/>
+                                        </a>
+                                        <input type="text" id="googleCopyTarget-@item.Id"
+                                               value="@(S.FullHostName + "/webhook/googlechat/" + item.Id)" hidden/>
+                                    }
+                                    @if (item.FacebookAccessToken != null && item.FacebookVerifyToken != null)
+                                    {
+                                        <a href="#" id="facebookCopyLink-@item.Id" data-bs-toggle="tooltip"
+                                           data-id="@item.Id" data-bs-placement="top" title="คลิกเพื่อคัดลอก">
+                                            <img src="~/image/messenger.png" alt="Facebook" width="30" height="30"/>
+                                        </a>
+                                        <input type="text" id="facebookCopyTarget-@item.Id"
+                                               value="@(S.FullHostName + "/webhook/facebook/" + item.Id)" hidden/>
+                                    }
+                                    @if (item.ProtectedApiKey != null)
+                                    {
+                                        <a href="#" id="openaiCopyLink-@item.Id" data-bs-toggle="tooltip"
+                                           data-id="@item.Id" data-bs-placement="top" title="คลิกเพื่อคัดลอก">
+                                            <img src="~/image/openai.svg" alt="OpenAI" width="30" height="30"/>
+                                        </a>
+                                        <input type="text" id="openaiCopyTarget-@item.Id"
+                                               value="@(S.FullHostName + "/webhook/openai/" + item.Id + "/chat/completions")"
+                                               hidden/>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn bg-gradient-primary dropdown-toggle"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                            ตั้งค่า AI
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a asp-controller="Chatbots" asp-action="Edit"
+                                                   asp-route-Id="@item.Id"
+                                                   class="dropdown-item">
+                                                    คุณสมบัติ AI
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a asp-controller="Chatbots" asp-action="Plugins"
+                                                   asp-route-Id="@item.Id"
+                                                   class="dropdown-item">
+                                                    ฟีเจอร์
+                                                </a>
+                                            </li>
+                                            <a asp-controller="Chatbots" asp-action="Memory"
+                                               asp-route-Id="@item.Id"
+                                               class="dropdown-item">
+                                                ความรู้ของ AI
+                                            </a>
+                                        </ul>
+                                    </div>
+                                    @if (item.Plugins.Contains(Systems.CustomJSON))
+                                    {
+                                        <a asp-controller="Chatbots" asp-action="FlexMessage"
+                                           asp-route-ChatBotId="@item.Id"
+                                           class="btn bg-gradient-info">
+                                            ข้อความอัตโนมัติ
+                                        </a>
+                                    }
+
+                                    @if (item.CanDelete)
+                                    {
+                                        <button type="button" class="btn bg-gradient-danger"
+                                                onclick="confirmDelete('@item.Id','@item.Name');">
+                                            ลบ
+                                        </button>
+                                    }
+
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <partial name="Paging" model="@(Model.PageIndex, Model.TotalPages)"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/javascript/search.js" asp-append-version="true"></script>
+    <script>
+        initialize({
+            deleteMessage: "ยีนยันต้องการลบบอทออกใช่หรือไม่",
+            deleteUrl: "@Url.Action("Delete", "Chatbots")",
+            baseActionUrl: "@Url.Action("Index", "Chatbots")"
+        });
+    </script>
+
+    <script>
+        // Initialize tooltip
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Function to handle copy or share
+        function handleCopyOrShare(copyTargetId, copyLinkId) {
+            var copyText = document.getElementById(copyTargetId).value;
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile && navigator.share) {
+                // Use Web Share API on mobile devices
+                navigator.share({
+                    title: 'Share Link',
+                    text: 'Check out this link:',
+                    url: copyText
+                }).then(function () {
+                    console.log('Successfully shared');
+                }).catch(function (err) {
+                    console.error('Error sharing:', err);
+                });
+            } else {
+                // Use clipboard API on non-mobile devices
+                navigator.clipboard.writeText(copyText).then(function () {
+                    var tooltip = bootstrap.Tooltip.getInstance(document.getElementById(copyLinkId));
+                    tooltip.setContent({'.tooltip-inner': 'Copied!'});
+                    setTimeout(() => {
+                        tooltip.setContent({'.tooltip-inner': 'คลิกเพื่อคัดลอก'});
+                    }, 2000);
+                }, function (err) {
+                    console.error('Async: Could not copy text: ', err);
+                });
+            }
+        }
+
+        // Event listeners for copy links
+        document.querySelectorAll('[id^=lineCopyLink]').forEach(function (element) {
+            element.addEventListener('click', function (e) {
+                e.preventDefault();
+                var itemId = this.getAttribute('data-id');
+                handleCopyOrShare('lineCopyTarget-' + itemId, 'lineCopyLink-' + itemId);
+            });
+        });
+
+        document.querySelectorAll('[id^=googleCopyLink]').forEach(function (element) {
+            element.addEventListener('click', function (e) {
+                e.preventDefault();
+                var itemId = this.getAttribute('data-id');
+                handleCopyOrShare('googleCopyTarget-' + itemId, 'googleCopyLink-' + itemId);
+            });
+        });
+
+        document.querySelectorAll('[id^=facebookCopyLink]').forEach(function (element) {
+            element.addEventListener('click', function (e) {
+                e.preventDefault();
+                var itemId = this.getAttribute('data-id');
+                handleCopyOrShare('facebookCopyTarget-' + itemId, 'facebookCopyLink-' + itemId);
+            });
+        });
+
+        document.querySelectorAll('[id^=openaiCopyLink]').forEach(function (element) {
+            element.addEventListener('click', function (e) {
+                e.preventDefault();
+                var itemId = this.getAttribute('data-id');
+                handleCopyOrShare('openaiCopyTarget-' + itemId, 'openaiCopyLink-' + itemId);
+            });
+        });
+
+    </script>
+
+}

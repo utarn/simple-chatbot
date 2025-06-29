@@ -1,0 +1,72 @@
+@using ChatbotApi.Application.Chatbots.Commands.CreateChatbotCommand
+@model CreateChatbotCommand
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "เพิ่มบอทใหม่";
+
+    CreateChatbotCommand delegateModel = new CreateChatbotCommand();
+    if (Model != null)
+    {
+        delegateModel = Model;
+    }
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-start gx-2">
+                        <i class="material-icons pt-2">add</i>
+                        <h6>
+                            @ViewData["Title"]
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-controller="Chatbots" asp-action="Create">
+
+                        <partial name="InputEditText"
+                                 model="@("Name", PropertyHelper<CreateChatbotCommand>.GetDisplayName(m => m.Name, L), delegateModel.Name)"/>
+
+                        <partial name="InputEditText"
+                                 model="@("LineChannelAccessToken", PropertyHelper<CreateChatbotCommand>.GetDisplayName(m => m.LineChannelAccessToken, L), delegateModel.LineChannelAccessToken)"/>
+
+                        <partial name="InputEditText"
+                                 model="@("FacebookVerifyToken", PropertyHelper<CreateChatbotCommand>.GetDisplayName(m => m.FacebookVerifyToken, L), delegateModel.FacebookVerifyToken)"/>
+                        
+                        <partial name="InputEditText"
+                                    model="@("FacebookAccessToken", PropertyHelper<CreateChatbotCommand>.GetDisplayName(m => m.FacebookAccessToken, L), delegateModel.FacebookAccessToken)"/>
+
+                        <partial name="InputEditText"
+                                 model="@("LlmKey", PropertyHelper<CreateChatbotCommand>.GetDisplayName(m => m.LlmKey, L), delegateModel.LlmKey)"/>
+
+                        <partial name="InputEditTextArea"
+                                 model="@("SystemRole", PropertyHelper<CreateChatbotCommand>.GetDisplayName(m => m.SystemRole, L), delegateModel.SystemRole, 5)"/>
+
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-responsive-sm bg-gradient-success me-2 mb-1">เพิ่ม</button>
+                            <button type="reset" class="btn btn-responsive-sm bg-gradient-info mb-1 me-2">ป้อนข้อมูลใหม่</button>
+                            <a class="btn btn-responsive-sm bg-gradient-secondary mb-1 me-2" asp-controller="Chatbots" asp-action="Index">ย้อนกลับ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+    $(".form-select").select2({
+        theme: "bootstrap-5",
+        width: "100%",
+        allowClear: true,
+        placeholder: "เลือก",
+        
+    });
+    </script>
+}

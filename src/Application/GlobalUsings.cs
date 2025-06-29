@@ -1,0 +1,12 @@
+﻿global using Ardalis.GuardClauses;
+global using AutoMapper;
+global using AutoMapper.QueryableExtensions;
+global using Microsoft.EntityFrameworkCore;
+global using ChatbotApi.Application.Common.Exceptions;
+global using FluentValidation;
+global using MediatR;
+global using ChatbotApi.Domain.Constants;
+global using ChatbotApi.Domain.Entities;
+global using ChatbotApi.Application.Common.Extensions;
+global using ChatbotApi.Application.Common.Interfaces;
+global using ChatbotApi.Application.Common.Models;

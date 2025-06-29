@@ -1,0 +1,117 @@
+@using ChatbotApi.Application.Chatbots.Commands.EditChatbotCommand
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery
+@model EditChatbotCommand
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "แก้ไขบอท";
+
+    var info = (ViewData["Info"] as ChatbotSingleViewModel)!;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-start gx-2">
+                        <i class="material-icons pt-2">add</i>
+                        <h6>
+                            @ViewData["Title"]
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-controller="Chatbots" asp-action="Edit" asp-route-Id="@info.Id"
+                        enctype="multipart/form-data">
+                        <input type="hidden" asp-for="Id" value="@info.Id" />
+
+                        <partial name="InputEditText"
+                            model="@("Name", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.Name, L), info.Name)" />
+
+                        <partial name="InputEditText"
+                            model="@("LineChannelAccessToken", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.LineChannelAccessToken, L), info.LineChannelAccessToken)" />
+
+                        <partial name="InputEditText"
+                            model="@("FacebookVerifyToken", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.FacebookVerifyToken, L), info.FacebookVerifyToken)" />
+
+                        <partial name="InputEditText"
+                            model="@("FacebookAccessToken", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.FacebookAccessToken, L), info.FacebookAccessToken)" />
+
+                        <partial name="InputEditText"
+                            model="@("ProtectedApiKey", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.ProtectedApiKey, L), info.ProtectedApiKey)" />
+
+                        <partial name="InputEditNumber"
+                            model="@("HistoryMinute", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.HistoryMinute, L), info.HistoryMinute.ToString(), (int?)1, (int?)1440)" />
+
+                        <partial name="InputEditSelect"
+                            model="@("AllowOutsideKnowledge", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.AllowOutsideKnowledge, L), info.AllowOutsideKnowledge.AllowOutsideKnowledgeSelectList(), string.Empty)" />
+
+                        <partial name="InputEditSelect"
+                            model="@("ResponsiveAgent", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.ResponsiveAgent, L), info.ResponsiveAgent.ResponsiveAgentSelectList(), string.Empty)" />
+
+                        <partial name="InputEditSelect"
+                            model="@("ModelName", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.ModelName, L), (SelectList)ViewData["ModelNameSelectList"]!, string.Empty)" />
+
+                        <partial name="InputEditSelect"
+                            model="@("EnableWebSearchTool", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.EnableWebSearchTool, L), info.EnableWebSearchTool.EnableWebSearchToolSelectList(), string.Empty)" />
+
+                        <partial name="InputEditNumber"
+                            model="@("MaxChunkSize", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.MaxChunkSize, L), info.MaxChunkSize.ToString(), (int?)100, (int?)8000)" />
+
+                        <partial name="InputEditNumber"
+                            model="@("MaxOverlappingSize", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.MaxOverlappingSize, L), info.MaxOverlappingSize.ToString(), (int?)0, (int?)500)" />
+
+                        <partial name="InputEditNumber"
+                            model="@("TopKDocument", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.TopKDocument, L), info.TopKDocument.ToString(), (int?)1, (int?)20)" />
+
+
+                        <div class="form-group">
+                            <label>@(PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.MaximumDistance, L))</label>
+                            <input type="number" class="form-control" name="MaximumDistance" id="MaximumDistance" value="@info.MaximumDistance" step="any" />
+                            @if (ViewData.ModelState["MaximumDistance"]?.Errors.Count > 0)
+                            {
+                                <span class="text-danger">
+                                    @foreach (var error in ViewData.ModelState["MaximumDistance"]!.Errors)
+                                    {
+                                        @error.ErrorMessage
+                                    }
+                                </span>
+                            }
+                        </div>
+
+                        <partial name="InputEditSelect"
+                            model="@("ShowReference", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.ShowReference, L), SystemList.ShowReferenceSelectList(info.ShowReference), string.Empty)" />
+
+
+                        <partial name="InputEditText"
+                            model="@("LlmKey", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.LlmKey, L), info.LlmKey)" />
+
+                        <partial name="InputEditTextArea"
+                            model="@("SystemRole", PropertyHelper<EditChatbotCommand>.GetDisplayName(m => m.SystemRole, L), info.SystemRole, 5)" />
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-responsive-sm bg-gradient-success me-2 mb-1">แก้ไข
+                            </button>
+                            <a class="btn btn-responsive-sm bg-gradient-secondary mb-1 me-2" asp-controller="Chatbots"
+                                asp-action="Index">ย้อนกลับ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(".form-select").select2({
+            theme: "bootstrap-5",
+            width: "100%",
+            allowClear: true,
+            placeholder: "เลือก",
+
+        });
+    </script>
+}

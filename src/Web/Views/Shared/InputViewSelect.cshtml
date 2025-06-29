@@ -1,0 +1,30 @@
+@model ValueTuple<string, string, SelectList, string?, string?>
+@{
+    var propertyName = Model.Item1;
+    var propertyText = Model.Item2;
+    var items = Model.Item3;
+    var emptyText = Model.Item4;
+    var onChange = Model.Item5;
+}
+
+<div class="col-md-4 col-sm-12">
+    <label for="@propertyName">@propertyText</label>
+    @if (string.IsNullOrEmpty(onChange))
+    {
+        <select class="form-select" name="@propertyName" asp-items="@items">
+            @if (!string.IsNullOrEmpty(emptyText))
+            {
+                <option value="">@emptyText</option>
+            }
+        </select>
+    }
+    else
+    {
+        <select class="form-select" name="@propertyName" asp-items="@items" onchange="@onChange"> 
+            @if (!string.IsNullOrEmpty(emptyText))
+            {
+                <option value="">@emptyText</option>
+            }
+        </select>
+    }
+</div>

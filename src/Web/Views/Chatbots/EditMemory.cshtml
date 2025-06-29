@@ -1,0 +1,168 @@
+@using ChatbotApi.Application.Chatbots.Commands.EditPreMessageCommand
+@using ChatbotApi.Application.Chatbots.Queries.GetPluginByChatBotQuery
+@using ChatbotApi.Application.Chatbots.Queries.GetPreMessageByIdQuery
+@model EditPreMessageCommand
+@inject ILocalizerService L
+@{
+    var info = (ViewData["Info"] as PreMessageSingleViewModel)!;
+    ViewData["Title"] = "แก้ไขความรู้ของบอทลำดับที่ " + info.Order + " ของ " + info.ChatBotName;
+    var plugins = ViewData["Plugins"] as List<PluginViewModel> ?? new List<PluginViewModel>();
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-start gx-2">
+                        <i class="material-icons pt-2">add</i>
+                        <h6>
+                            @ViewData["Title"]
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-controller="Chatbots" asp-action="EditMemory" asp-route-Id="@info.ChatBotId"
+                          asp-route-Order="@info.Order">
+                        <input type="hidden" name="Id" value="@info.ChatBotId"/>
+                        <input type="hidden" name="Order" value="@info.Order"/>
+
+                        <partial name="InputEditTextArea"
+                                 model="@("UserMessage", PropertyHelper<EditPreMessageCommand>.GetDisplayName(m => m.UserMessage, L), info.UserMessage, 15)"/>
+                        <p id="userMessageCharCount">จำนวนตัวอักษร: 0/8000</p>
+
+                        <partial name="InputEditTextArea"
+                                 model="@("AssistantMessage", PropertyHelper<EditPreMessageCommand>.GetDisplayName(m => m.AssistantMessage, L), info.AssistantMessage, 15)"/>
+                        <p id="assistantMessageCharCount">จำนวนตัวอักษร: 0/8000</p>
+
+                        <partial name="InputEditCheckBox"
+                                 model="@("IsRequired", PropertyHelper<EditPreMessageCommand>.GetDisplayName(m => m.IsRequired, L), info.IsRequired)"/>
+
+                        @if (info.FileName != null)
+                        {
+                            <div class="col-12">
+                                <label>@(PropertyHelper<PreMessageSingleViewModel>.GetDisplayName(m => m.FileName, L))</label>
+                                <span class="text-dark font-weight-bold">@info.FileName</span>
+                            </div>
+                        }
+
+                        @if (info.Url != null)
+                        {
+                            <div class="form-group">
+                                <label>URL</label>
+                                <input type="text" class="form-control" value="@info.Url" readonly/>
+                            </div>
+
+                            <partial name="InputEditText"
+                                     model="@("CronJob", PropertyHelper<EditPreMessageCommand>.GetDisplayName(m => m.CronJob, L), info.CronJob)"/>
+                            <small class="form-text text-muted">
+                                ตัวอย่าง: */5 * * * * (ทุก 5 นาที), 0 */1 * * * (ทุกชั่วโมง), 0 0 * * *
+                                (ทุกวันเวลาเที่ยงคืน)
+                            </small>
+
+                            <partial name="InputEditNumber"
+                                     model="@("ChunkSize", PropertyHelper<EditPreMessageCommand>.GetDisplayName(m => m.ChunkSize, L), info.ChunkSize.ToString(), (int?)100, (int?)8000)"/>
+
+                            <partial name="InputEditNumber"
+                                     model="@("OverlappingSize", PropertyHelper<EditPreMessageCommand>.GetDisplayName(m => m.OverlappingSize, L), info.OverlappingSize.ToString(), (int?)0, (int?)500)"/>
+                        }
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-responsive-sm bg-gradient-success me-2 mb-1">แก้ไข
+                            </button>
+                            <button type="button" class="btn btn-responsive-sm bg-gradient-danger mb-1 me-2"
+                                    id="lookupButton">
+                                เรียกข้อมูลคำตอบของผู้ช่วยจาก LLM
+                            </button>
+                            <a class="btn btn-responsive-sm bg-gradient-secondary mb-1 me-2" asp-controller="Chatbots"
+                               asp-route-Id="@info.ChatBotId" asp-action="Memory">ย้อนกลับ</a>
+                        </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">กำลังประมวลผล...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(".form-select").select2({
+            theme: "bootstrap-5",
+            width: "100%",
+            allowClear: true,
+            placeholder: "เลือก",
+
+        });
+
+        const userMessage = document.getElementById("UserMessage");
+        const charCount = document.getElementById("userMessageCharCount");
+        const systemMessage = document.getElementById("AssistantMessage");
+        const charCount2 = document.getElementById("assistantMessageCharCount");
+        charCount.textContent = `จำนวนตัวอักษร: ${userMessage.value.length}/8000`;
+        charCount2.textContent = `จำนวนตัวอักษร: ${systemMessage.value.length}/8000`;
+
+        userMessage.addEventListener("input", function () {
+            charCount.textContent = `จำนวนตัวอักษร: ${userMessage.value.length}/8000`;
+
+            if (length > 8000) {
+                charCount.classList.add("text-danger");
+            } else {
+                charCount.classList.remove("text-danger");
+            }
+        });
+
+        systemMessage.addEventListener("input", function () {
+            charCount2.textContent = `จำนวนตัวอักษร: ${systemMessage.value.length}/8000`;
+
+            if (length > 8000) {
+                charCount2.classList.add("text-danger");
+            } else {
+                charCount2.classList.remove("text-danger");
+            }
+        });
+
+        $('#lookupButton').click(function () {
+            var data = {
+                id: @info.ChatBotId,
+                order: @info.Order
+            };
+
+            // Show the loading modal
+            $('#loadingModal').modal('show');
+
+            $.ajax({
+                url: '@Url.Action("ObtainMessage", "Chatbots")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    $('#AssistantMessage').val(response);
+                },
+                error: function (xhr, status, error) {
+                    console.error('An error occurred:', error);
+                },
+                complete: function () {
+                    // Hide the loading modal
+                    $('#loadingModal').modal('hide');
+                }
+            });
+        });
+
+    </script>
+}

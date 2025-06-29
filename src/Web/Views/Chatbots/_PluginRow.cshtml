@@ -1,0 +1,24 @@
+@using ChatbotApi.Application.Chatbots.Queries.GetPluginByChatBotQuery
+@model PluginViewModel
+
+<tr role="row" id="row-@(Model.PluginName.Replace(" ", ""))">
+    <td>
+        @Model.PluginName
+    </td>
+    <td>
+        @Model.Description
+    </td>
+    <td>
+        <button class="btn btn-link toggle-plugin" type="button"
+                data-plugin="@Model.PluginName" data-chatbotId="@Model.ChatbotId">
+            @if (Model.IsEnabled)
+            {
+                <i class="material-icons text-success">check</i>
+            }
+            else
+            {
+                <i class="material-icons text-danger">close</i>
+            }
+        </button>
+    </td>
+</tr>

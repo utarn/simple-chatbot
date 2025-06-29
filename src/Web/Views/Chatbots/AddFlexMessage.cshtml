@@ -1,0 +1,76 @@
+@using ChatbotApi.Application.Chatbots.Commands.CreateFlexMessageCommand
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery
+@model CreateFlexMessageCommand
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "เพิ่ม Flex Message";
+    var info = (ViewData["Info"] as ChatbotSingleViewModel)!;
+    var delegateModel = new CreateFlexMessageCommand();
+    if (Model != null)
+    {
+        delegateModel = Model;
+    }
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-start gx-2">
+                        <i class="material-icons pt-2">add</i>
+                        <h6>
+                            @ViewData["Title"]
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-controller="Chatbots" asp-action="AddFlexMessage" asp-route-ChatbotId="@info.Id">
+                        <input type="hidden" asp-for="ChatbotId" value="@info.Id"/>
+
+                        <partial name="InputEditSelect"
+                                 model="@("Type", PropertyHelper<CreateFlexMessageCommand>.GetDisplayName(m => m.Type, L), delegateModel.Type.MethodSelectList(), string.Empty)"/>
+
+                        <partial name="InputEditText"
+                                 model="@("Key", PropertyHelper<CreateFlexMessageCommand>.GetDisplayName(m => m.Key, L), delegateModel.Key)"/>
+
+                        <partial name="InputEditText"
+                                 model="@("Order", PropertyHelper<CreateFlexMessageCommand>.GetDisplayName(m => m.Order, L), delegateModel.Order.ToString())"/>
+                        
+                        <partial name="InputEditTextArea"
+                                 model="@("JsonValue", PropertyHelper<CreateFlexMessageCommand>.GetDisplayName(m => m.JsonValue, L), delegateModel.JsonValue, 15)"/>
+                        
+                        <h3>ท่านสามารถสร้าง ข้อความตอบกลับได้จาก</h3>
+                        <ul class="list-group text-primary">
+                            <li class="list-group-item">
+                                Google chat UI Kit: <a href="https://addons.gsuite.google.com/uikit/builder?hl=th" target="_blank">https://addons.gsuite.google.com/uikit/builder?hl=th</a>
+                            </li>
+                            <li class="list-group-item">
+                                Line Flex Message: <a href="https://developers.line.biz/flex-simulator/" target="_blank">https://developers.line.biz/flex-simulator/</a>
+                            </li>
+                        </ul>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-responsive-sm bg-gradient-success me-2 mb-1">เพิ่ม</button>
+                            <button type="reset" class="btn btn-responsive-sm bg-gradient-info mb-1 me-2">ป้อนข้อมูลใหม่</button>
+                            <a class="btn btn-responsive-sm bg-gradient-secondary mb-1 me-2" asp-controller="Chatbots" asp-route-ChatbotId="@info.Id" asp-action="FlexMessage">ย้อนกลับ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+    $(".form-select").select2({
+        theme: "bootstrap-5",
+        width: "100%",
+        allowClear: true,
+        placeholder: "เลือก",
+        
+    });
+    </script>
+}

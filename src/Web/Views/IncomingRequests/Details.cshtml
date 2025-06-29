@@ -1,0 +1,57 @@
+@model ChatbotApi.Domain.Entities.IncomingRequest
+
+@{
+    ViewData["Title"] = "Incoming Request Details";
+    string prettifiedJson = null;
+    if (!string.IsNullOrWhiteSpace(Model.Raw))
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(Model.Raw);
+            prettifiedJson = System.Text.Json.JsonSerializer.Serialize(doc.RootElement, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            prettifiedJson = Model.Raw; // fallback to raw if not valid JSON
+        }
+    }
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex gx-2">
+                    <i class="material-icons pb-2">request_page</i>
+                    <h6>Incoming Request Details</h6>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th>Date/Time</th>
+                                <td>@Model.Created.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            </tr>
+                            <tr>
+                                <th>Endpoint</th>
+                                <td>@Model.Endpoint</td>
+                            </tr>
+                            <tr>
+                                <th>Channel</th>
+                                <td>@Model.Channel</td>
+                            </tr>
+                            <tr>
+                                <th>Request Body (JSON)</th>
+                                <td>
+                                    <pre style="white-space: pre-wrap; word-break: break-word; background: #f8f9fa; padding: 1rem; border-radius: 0.5rem;">@prettifiedJson</pre>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

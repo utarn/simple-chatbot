@@ -1,0 +1,47 @@
+@model ValueTuple<string, string, SelectList, string?>
+@{
+    var propertyName = Model.Item1;
+    var propertyText = Model.Item2;
+    var items = Model.Item3;
+    var emptyText = Model.Item4;
+}
+
+@if (string.IsNullOrEmpty(emptyText))
+{
+    <div class="form-group">
+        <label>@propertyText</label>
+        <select class="form-select" data-val="true" data-val-required="The @propertyName field is required." id="@propertyName" name="@propertyName" asp-items="@items">
+            @if (!string.IsNullOrEmpty(emptyText))
+            {
+                <option value="">@emptyText</option>
+            }
+        </select>
+        @if (ViewData.ModelState[propertyName]?.Errors.Count > 0)
+        {
+            <span class="text-danger">
+                @foreach (var error in ViewData.ModelState[propertyName]!.Errors)
+                {
+                    @error.ErrorMessage
+                }
+            </span>
+        }
+    </div>
+}
+else
+{
+    <div class="form-group">
+        <label>@propertyText</label>
+        <select class="form-select" id="@propertyName" name="@propertyName" asp-items="@items">
+            <option value="">@emptyText</option>
+        </select>
+        @if (ViewData.ModelState[propertyName]?.Errors.Count > 0)
+        {
+            <span class="text-danger">
+                @foreach (var error in ViewData.ModelState[propertyName]!.Errors)
+                {
+                    @error.ErrorMessage
+                }
+            </span>
+        }
+    </div>
+}

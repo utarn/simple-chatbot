@@ -1,0 +1,21 @@
+@model ValueTuple<string, string, string?, int>
+@{
+var propertyName = Model.Item1;
+var propertyText = Model.Item2;
+var value = Model.Item3;
+}
+
+<div class="form-group">
+    <label>@propertyText</label>
+    <textarea type="text" class="form-control" rows="@Model.Item4" name="@propertyName" id="@propertyName">@(value)</textarea>
+    @if (ViewData.ModelState[propertyName]?.Errors.Count > 0)
+    {
+    <span class="text-danger">
+            @foreach (var error in ViewData.ModelState[propertyName]!.Errors)
+        {
+        @error.ErrorMessage
+        }
+        </span>
+    }
+</div>
+

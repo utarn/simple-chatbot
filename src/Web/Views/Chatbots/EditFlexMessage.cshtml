@@ -1,0 +1,74 @@
+@using ChatbotApi.Application.Chatbots.Commands.EditFlexMessageCommand
+@using ChatbotApi.Application.Chatbots.Queries.GetFlexMessageByIdQuery
+@model EditFlexMessageCommand
+@inject ILocalizerService L
+@{
+    FlexMessageSingleViewModel info = (ViewData["Info"] as FlexMessageSingleViewModel)!;
+    ViewData["Title"] = "แก้ไข Flex Message " + info.Key + "ดับที่ " + info.Order;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-start gx-2">
+                        <i class="material-icons pt-2">add</i>
+                        <h6>
+                            @ViewData["Title"]
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-controller="Chatbots" asp-action="EditFlexMessage" asp-route-id="@info.Id">
+                        <input type="hidden" asp-for="Id" value="@info.Id"/>
+                        <input type="hidden" asp-for="ChatbotId" value="@info.ChatbotId"/>
+                        <partial name="InputEditSelect"
+                                 model="@("Type", PropertyHelper<EditFlexMessageCommand>.GetDisplayName(m => m.Type, L), info.Type.MethodSelectList(), string.Empty)"/>
+
+                        <partial name="InputEditText"
+                                 model="@("Key", PropertyHelper<EditFlexMessageCommand>.GetDisplayName(m => m.Key, L), info.Key)"/>
+
+                        <partial name="InputEditText"
+                                 model="@("Order", PropertyHelper<EditFlexMessageCommand>.GetDisplayName(m => m.Order, L), info.Order.ToString())"/>
+
+                        <partial name="InputEditTextArea"
+                                 model="@("JsonValue", PropertyHelper<EditFlexMessageCommand>.GetDisplayName(m => m.JsonValue, L), info.JsonValue, 15)"/>
+
+                        <h3>ท่านสามารถสร้าง ข้อความตอบกลับได้จาก</h3>
+                        <ul class="list-group text-primary">
+                            <li class="list-group-item">
+                                Google chat UI Kit: <a href="https://addons.gsuite.google.com/uikit/builder?hl=th"
+                                                       target="_blank">https://addons.gsuite.google.com/uikit/builder?hl=th</a>
+                            </li>
+                            <li class="list-group-item">
+                                Line Flex Message: <a href="https://developers.line.biz/flex-simulator/"
+                                                      target="_blank">https://developers.line.biz/flex-simulator/</a>
+                            </li>
+                        </ul>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-responsive-sm bg-gradient-success me-2 mb-1">แก้ไข
+                            </button>
+                            <a class="btn btn-responsive-sm bg-gradient-secondary mb-1 me-2" asp-controller="Chatbots"
+                               asp-route-ChatbotId="@info.ChatbotId" asp-action="FlexMessage">ย้อนกลับ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(".form-select").select2({
+            theme: "bootstrap-5",
+            width: "100%",
+            allowClear: true,
+            placeholder: "เลือก",
+
+        });
+    </script>
+}

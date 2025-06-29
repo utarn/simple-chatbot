@@ -1,0 +1,360 @@
+@{
+    ViewData["Title"] = "Calendar Management";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Calendar Management
+                    </h4>
+                    @if (ViewBag.IsAuthorized == true)
+                    {
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="revokeAuthorization()">
+                            <i class="fas fa-times me-1"></i>
+                            Revoke Access
+                        </button>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (ViewBag.IsAuthorized != true)
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-4x text-warning mb-3"></i>
+                            <h5>Calendar Authorization Required</h5>
+                            <p class="text-muted mb-4">
+                                To create calendar events, you need to authorize access to your Google Calendar.
+                            </p>
+                            <a href="@Url.Action("Authorize")" class="btn btn-primary btn-lg">
+                                <i class="fab fa-google me-2"></i>
+                                Authorize Google Calendar
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <form id="createEventForm" onsubmit="createEvent(event)">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="summary" class="form-label">
+                                            <i class="fas fa-tag me-1"></i>
+                                            Event Title
+                                        </label>
+                                        <input type="text" class="form-control" id="summary" name="summary"
+                                            placeholder="Enter event title" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="isAllDay" class="form-label">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Event Type
+                                        </label>
+                                        <select class="form-control" id="isAllDay" name="isAllDay"
+                                            onchange="toggleTimeFields()">
+                                            <option value="false">Timed Event</option>
+                                            <option value="true">All Day Event</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Description (Optional)
+                                </label>
+                                <textarea class="form-control" id="description" name="description" rows="3"
+                                placeholder="Enter event description"></textarea>
+                            </div>
+
+                            <div class="row" id="timeFields">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="startDateTime" class="form-label">
+                                            <i class="fas fa-play me-1"></i>
+                                            Start Date & Time
+                                        </label>
+                                        <input type="datetime-local" class="form-control" id="startDateTime"
+                                            name="startDateTime" required />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="endDateTime" class="form-label">
+                                            <i class="fas fa-stop me-1"></i>
+                                            End Date & Time
+                                        </label>
+                                        <input type="datetime-local" class="form-control" id="endDateTime"
+                                            name="endDateTime" required />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row" id="dateFields" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="startDate" class="form-label">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Start Date
+                                        </label>
+                                        <input type="date" class="form-control" id="startDate" name="startDate" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="endDate" class="form-label">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            End Date
+                                        </label>
+                                        <input type="date" class="form-control" id="endDate" name="endDate" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <button type="submit" class="btn btn-primary" id="createBtn">
+                                    <i class="fas fa-plus me-2"></i>
+                                    Create Event
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                                    <i class="fas fa-eraser me-2"></i>
+                                    Clear
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            @if (ViewBag.IsAuthorized == true)
+            {
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Calendar API Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Permissions Granted:</h6>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>Create calendar events</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Access calendar data</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Authorization Status:</h6>
+                                <div id="authStatus" class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>
+                                    Authorized
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleTimeFields() {
+        const isAllDay = document.getElementById('isAllDay').value === 'true';
+        const timeFields = document.getElementById('timeFields');
+        const dateFields = document.getElementById('dateFields');
+
+        if (isAllDay) {
+            timeFields.style.display = 'none';
+            dateFields.style.display = 'block';
+            // Remove required from time fields
+            document.getElementById('startDateTime').removeAttribute('required');
+            document.getElementById('endDateTime').removeAttribute('required');
+            // Add required to date fields
+            document.getElementById('startDate').setAttribute('required', 'required');
+            document.getElementById('endDate').setAttribute('required', 'required');
+        } else {
+            timeFields.style.display = 'block';
+            dateFields.style.display = 'none';
+            // Add required to time fields
+            document.getElementById('startDateTime').setAttribute('required', 'required');
+            document.getElementById('endDateTime').setAttribute('required', 'required');
+            // Remove required from date fields
+            document.getElementById('startDate').removeAttribute('required');
+            document.getElementById('endDate').removeAttribute('required');
+        }
+    }
+
+    function clearForm() {
+        document.getElementById('createEventForm').reset();
+        toggleTimeFields(); // Reset field visibility
+    }
+
+    function createEvent(event) {
+        event.preventDefault();
+
+        const createBtn = document.getElementById('createBtn');
+        const originalText = createBtn.innerHTML;
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+
+        const formData = new FormData(event.target);
+        const isAllDay = formData.get('isAllDay') === 'true';
+
+        let startDateTime, endDateTime;
+
+        if (isAllDay) {
+            startDateTime = new Date(formData.get('startDate') + 'T00:00:00').toISOString();
+            endDateTime = new Date(formData.get('endDate') + 'T23:59:59').toISOString();
+        } else {
+            startDateTime = new Date(formData.get('startDateTime')).toISOString();
+            endDateTime = new Date(formData.get('endDateTime')).toISOString();
+        }
+
+        const eventData = {
+            summary: formData.get('summary'),
+            description: formData.get('description'),
+            startDateTime: startDateTime,
+            endDateTime: endDateTime,
+            isAllDay: isAllDay
+        };
+
+        fetch('@Url.Action("CreateEvent")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: JSON.stringify(eventData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    if (data.message.includes('successfully')) {
+                        showAlert('success', data.message);
+                        clearForm();
+                    } else {
+                        showAlert('danger', data.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('danger', 'An error occurred while creating the event.');
+            })
+            .finally(() => {
+                createBtn.disabled = false;
+                createBtn.innerHTML = originalText;
+            });
+    }
+
+    function revokeAuthorization() {
+        if (confirm('Are you sure you want to revoke Calendar access? You will need to re-authorize to create events.')) {
+            fetch('@Url.Action("RevokeAuthorization")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        if (data.message.includes('successfully')) {
+                            window.location.reload();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while revoking authorization.');
+                });
+        }
+    }
+
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Check authorization status on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        @if (ViewBag.IsAuthorized == true)
+            {
+                <text>
+                    fetch('@Url.Action("IsAuthorized")')
+                    .then(response => response.json())
+                    .then(data => {
+                        const statusElement = document.getElementById('authStatus');
+                    if (data.isAuthorized) {
+                        statusElement.className = 'badge bg-success';
+                    statusElement.innerHTML = '<i class="fas fa-check me-1"></i>Authorized';
+                        } else {
+                        statusElement.className = 'badge bg-danger';
+                    statusElement.innerHTML = '<i class="fas fa-times me-1"></i>Not Authorized';
+                    window.location.href = '@Url.Action("Authorize")';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking authorization:', error);
+                    });
+                </text>
+        }
+
+        // Set default start time to current time + 1 hour
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        document.getElementById('startDateTime').value = now.toISOString().slice(0, 16);
+
+        // Set default end time to start time + 1 hour
+        const endTime = new Date(now);
+        endTime.setHours(endTime.getHours() + 1);
+        document.getElementById('endDateTime').value = endTime.toISOString().slice(0, 16);
+
+        // Set default dates for all-day events
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+    });
+</script>

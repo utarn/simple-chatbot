@@ -1,0 +1,241 @@
+@using ChatbotApi.Application.Chatbots.Queries.GetPreMessageQuery
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery
+@using ChatbotApi.Application.Chatbots.Queries.GetPluginByChatBotQuery
+@model PaginatedList<PreMessageViewModel, PreMessageMetadata>
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "รายการความรู้ของบอท";
+    var info = (ViewData["Info"] as ChatbotSingleViewModel)!;
+    var success = (bool?)ViewData["Success"];
+    var deleteSuccess = (bool?)ViewData["DeleteSuccess"];
+    var onProcess = (bool?)ViewData["OnProcess"];
+    var plugins = ViewData["Plugins"] as List<PluginViewModel> ?? new List<PluginViewModel>();
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="mb-3 text-white">
+            <i class="border-radius-lg shadow-sm material-icons">search</i> @ViewData["Title"]
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="accordion accordion-flush mb-3" id="searchHeader">
+        <div class="accordion-item">
+            <h2 class="accordion-header bg-white rounded-4" id="flush-headingOne">
+                <button class="accordion-button showing" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                    <div class="d-flex align-items-center w-100">
+                        <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                            <i class="ni ni-zoom-split-in opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <div class="ms-3">
+                            <p class="text-sm mb-0 text-uppercase font-weight-bold">เครื่องมือ</p>
+                            <h5 class="font-weight-bolder mb-0">
+                                การค้นหา
+                            </h5>
+                        </div>
+                        <div class="ms-auto">
+                            <i class="fa-solid fa-angles-down accordion-icon-collapse"></i>
+                            <i class="fa-solid fa-angles-up accordion-icon-expand"></i>
+                        </div>
+                    </div>
+                </button>
+            </h2>
+            <div id="flush-collapseOne" class="accordion-collapse show mt-2" aria-labelledby="flush-headingOne"
+                 data-bs-parent="#searchHeader">
+                <div class="card px-1">
+                    <form id="searchForm">
+                        <input type="hidden" name="Id" value="@info.Id"/>
+                        <input type="hidden" name="PageSize" value="@Model.PageSize"/>
+                        <input type="hidden" name="Page" value="1"/>
+                        <div class="row gx-2">
+                            <partial name="InputViewText"
+                                     model="@("UserMessage", PropertyHelper<PreMessageMetadata>.GetDisplayName(m => m.UserMessage, L), Model.Metadata?.UserMessage)"/>
+
+                            <partial name="InputViewText"
+                                     model="@("AssistantMessage", PropertyHelper<PreMessageMetadata>.GetDisplayName(m => m.AssistantMessage, L), Model.Metadata?.AssistantMessage)"/>
+                            <div class="col-md-4 col-sm-12">
+                                <label class="invisible">button</label>
+                                <input type="button" class="btn bg-gradient-secondary form-control" value="ล้างเงื่อนไข"
+                                       onclick="restoreSearch()"/>
+                            </div>
+                            <div class="col-md-4 col-sm-12">
+                                <label class="invisible">button</label>
+                                <input type="button" class="btn bg-gradient-primary form-control" value="ค้นหา"
+                                       onclick="updateSearch()"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row" id="contentBody">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex justify-content-start gx-2">
+                    <i class="material-icons pb-2">person</i>
+                    <h6>
+                        @ViewData["Title"]
+                    </h6>
+                    <a asp-controller="Chatbots" asp-action="AddMemory" asp-route-Id="@info.Id"
+                       class="btn btn-sm bg-gradient-info ms-auto me-2 mt-2">
+                        <i class="material-icons">person_add</i> เพิ่มความข้อความ
+                    </a>
+                    <a asp-controller="Chatbots" asp-action="AddMemoryByFile" asp-route-Id="@info.Id"
+                       class="btn btn-sm bg-gradient-info me-2 mt-2">
+                        <i class="material-icons">picture_as_pdf</i> เพิ่มจากแฟ้มเอกสาร
+                    </a>
+                    <a asp-controller="Chatbots" asp-action="ListMemoryFile" asp-route-Id="@info.Id"
+                       class="btn btn-sm bg-gradient-info me-2 mt-2">
+                        <i class="material-icons">details</i> แฟ้มเอกสาร
+                    </a>
+                    <a asp-action="Index" class="btn btn-sm bg-gradient-primary mt-2">
+                        <i class="material-icons">arrow_back</i> ย้อนกลับ
+                    </a>
+                </div>
+            </div>
+            <div class="card-body m-0" id="body">
+                @if (onProcess != null && onProcess.Value)
+                {
+                    <div class="alert alert-success alert-dismissible fade show d-flex" role="alert">
+                        กำลังประมวลผลข้อมูล
+                        <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                    </div>
+                }
+                @if (info.HasImportError)
+                {
+                    <div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
+                        มีรายละเอียดการนำเข้า&nbsp;&nbsp;&nbsp;&nbsp;<a asp-action="Errors" asp-route-Id="@info.Id">ดูรายละเอียด</a>
+                        <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                    </div>
+                }
+                @if (success != null)
+                {
+                    @if (success.Value)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show d-flex" role="alert">
+                            เพิ่มความรู้ของบอทสำเร็จ
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
+                            ไม่สามารถเพิ่มความรู้ของบอทได้
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                }
+                @if (deleteSuccess != null)
+                {
+                    @if (deleteSuccess.Value)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show d-flex" role="alert">
+                            ลบบอทสำเร็จ
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show d-flex" role="alert">
+                            ไม่สามารถลบบอทได้
+                            <button type="button" class="ms-auto btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                <i class="material-icons">close</i>
+                            </button>
+                        </div>
+                    }
+                }
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr role="row">
+                            <th>
+                                @(PropertyHelper<PreMessageViewModel>.GetDisplayName(m => m.Order, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<PreMessageViewModel>.GetDisplayName(m => m.UserMessage, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<PreMessageViewModel>.GetDisplayName(m => m.AssistantMessage, L))
+                            </th>
+                            <th>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr role="row">
+                                <td>
+                                    @item.Order
+                                    @if (item.IsRequired)
+                                    {
+                                        <span class="badge bg-gradient-danger">จำเป็น</span>
+                                    }
+                                </td>
+                                <td>
+                                    @item.UserMessage.GetSubString(50)
+                                    <br/>
+                                    @if (item.FileName != null && item.FileName.StartsWith("http"))
+                                    {
+                                        <span>เว็บไซต์: @item.FileName</span>
+                                    }
+                                    else if (item.FileName != null)
+                                    {
+                                        <span>แฟ้มข้อมูล: @item.FileName</span>
+                                    }
+                                </td>
+                                <td>
+                                    @item.AssistantMessage.GetSubString(50)
+                                </td>
+                                <td>
+                                    <a asp-controller="Chatbots" asp-action="EditMemory"
+                                       asp-route-Id="@item.ChatBotId" asp-route-Order="@item.Order"
+                                       class="btn bg-gradient-primary">
+                                        แก้ไข
+                                    </a>
+                                    <button type="button" class="btn bg-gradient-danger"
+                                            onclick="confirmDelete('@(item.ChatBotId + ":" + item.Order)','@(item.UserMessage.GetSubString(10))');">
+                                        ลบ
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <partial name="Paging" model="@(Model.PageIndex, Model.TotalPages)"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/javascript/search.js" asp-append-version="true"></script>
+    <script>
+        initialize({
+            deleteMessage: "ยีนยันต้องการลบความรู้ของบอทนี้ใช่หรือไม่",
+            deleteUrl: "@Url.Action("DeleteMemory", "Chatbots")",
+            baseActionUrl: "@Url.Action("Memory", "Chatbots")"
+        });
+    </script>
+}

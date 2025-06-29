@@ -1,0 +1,51 @@
+@model ValueTuple<int, int>
+@{
+    var currentPage = Model.Item1;
+    var totalPages = Model.Item2;
+    var start = Math.Max(1, currentPage - 5);
+    var end = Math.Min(totalPages, currentPage + 5);
+}
+<div class="d-flex justify-content-center">
+    <ul class="pagination pagination-info m-2">
+        @if (currentPage > 1)
+        {
+            <li class="page-item">
+                <a class="page-link" onclick="navigatePage(@(currentPage - 1))" aria-label="Previous">
+                    <span aria-hidden="true">
+                        <i style="color: black" class="material-icons" aria-hidden="true">arrow_back_ios</i>
+                    </span>
+                </a>
+            </li>
+        }
+        @for (var i = start; i <= end; i++)
+        {
+            @if (i == currentPage)
+            {
+                <li class="page-item">
+                    <a class="page-link" id="currentPage" style="color: black; background-color: pink" onclick="navigatePage(@i)">@i</a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item">
+                    <a class="page-link" style="color: black" onclick="navigatePage(@i)">@i</a>
+                </li>
+            }
+        }
+        @if (currentPage < totalPages)
+        {
+            <li class="page-item">
+                <a class="page-link" onclick="navigatePage(@(currentPage + 1))" aria-label="Next">
+                    <i style="color: black" class="material-icons" aria-hidden="true">arrow_forward_ios</i>
+                </a>
+            </li>
+        }
+        <select name="pageSizeSelect" class="form-select" onchange="changePageSize()" id="pageSelect" style="width: 80px">
+            <option value="5">5</option>
+            <option value="20">20</option>
+            <option value="40">40</option>
+            <option value="60">60</option>
+            <option value="100">100</option>
+        </select>
+    </ul>
+</div>

@@ -1,0 +1,111 @@
+﻿@* ChatbotApi.Web/Views/Chatbots/AddMemoryByFile.cshtml *@
+@using ChatbotApi.Application.Chatbots.Commands.CreatePreMessageFromFileCommand
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery
+@model CreatePreMessageFromFileCommand
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "เพิ่มความรู้ของบอทใหม่จากไฟล์";
+    var info = (ViewData["Info"] as ChatbotSingleViewModel)!;
+    var delegateModel = new CreatePreMessageFromFileCommand()
+    {
+        ChunkSize = info.MaxChunkSize ?? 2000,
+        OverlappingSize = info.MaxOverlappingSize ?? 200,
+    };
+    if (Model != null)
+    {
+        delegateModel = Model;
+    }
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0 p-3">
+                    <div class="d-flex justify-content-start gx-2">
+                        <i class="material-icons pt-2">add</i>
+                        <h6>
+                            @ViewData["Title"]
+                        </h6>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" asp-controller="Chatbots" asp-action="AddMemoryByFile" asp-route-Id="@info.Id"
+                          enctype="multipart/form-data">
+                        <input type="hidden" name="Id" value="@info.Id" />
+
+                        <div class="form-group">
+                            <label for="Files">ไฟล์ PDF/DOCX/XLSX</label>
+                            <input type="file" class="form-control" id="Files" name="Files"
+                                   accept="application/pdf,
+                                         application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                                         application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                   multiple>
+                        </div>
+
+                        <div class="form-check" id="cagCheckboxContainer" style="display: none;">
+                            <input class="form-check-input" type="checkbox" asp-for="UseCag" id="UseCag">
+                            <label class="form-check-label" for="UseCag">
+                                ใช้ Content As-is Generation (CAG)
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Urls">URL เว็บไซต์</label>
+                            <textarea class="form-control" id="Urls" name="Urls" rows="3"
+                                      placeholder="ป้อน URL ที่คั่นด้วยบรรทัดใหม่ หรือ ;"></textarea>
+                        </div>
+
+                        <partial name="InputEditNumber"
+                                 model="@("ChunkSize", PropertyHelper<CreatePreMessageFromFileCommand>.GetDisplayName(m => m.ChunkSize, L), delegateModel.ChunkSize.ToString(), (int?)100, (int?)8000)" />
+
+                        <partial name="InputEditNumber"
+                                 model="@("OverlappingSize", PropertyHelper<CreatePreMessageFromFileCommand>.GetDisplayName(m => m.OverlappingSize, L), delegateModel.OverlappingSize.ToString(), (int?)0, (int?)500)" />
+
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-responsive-sm bg-gradient-success me-2 mb-1">เพิ่ม
+                            </button>
+                            <button type="reset" class="btn btn-responsive-sm bg-gradient-info mb-1 me-2">
+                                ป้อนข้อมูลใหม่
+                            </button>
+                            <a class="btn btn-responsive-sm bg-gradient-secondary mb-1 me-2" asp-controller="Chatbots"
+                               asp-route-Id="@info.Id" asp-action="Memory">ย้อนกลับ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(".form-select").select2({
+            theme: "bootstrap-5",
+            width: "100%",
+            allowClear: true,
+            placeholder: "เลือก",
+        });
+
+        // JavaScript to show/hide the CAG checkbox
+        document.getElementById('Files').addEventListener('change', function () {
+            var files = this.files;
+            var allPdf = true;
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].type !== 'application/pdf') {
+                    allPdf = false;
+                    break;
+                }
+            }
+            document.getElementById('cagCheckboxContainer').style.display = allPdf ? 'block' : 'none';
+            //if allPdf is false, set UseCag to false.
+            if (!allPdf) {
+                document.getElementById('UseCag').checked = false;
+            }
+
+        });
+    </script>
+}

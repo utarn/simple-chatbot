@@ -1,0 +1,29 @@
+@model ValueTuple<string, string, bool>
+@{
+    var propertyName = Model.Item1;
+    var propertyText = Model.Item2;
+    var isChecked = Model.Item3;
+}
+
+<div class="form-group">
+    <div class="form-check mb-3">
+        <input type="checkbox" 
+               class="form-check-input" 
+               name="@propertyName" 
+               id="@propertyName" 
+               value="true"
+               @(isChecked ? "checked" : "") />
+        <label class="form-check-label ms-2" for="@propertyName">
+            @propertyText
+        </label>
+    </div>
+    @if (ViewData.ModelState[propertyName]?.Errors.Count > 0)
+    {
+        <span class="text-danger">
+            @foreach (var error in ViewData.ModelState[propertyName]!.Errors)
+            {
+                @error.ErrorMessage
+            }
+        </span>
+    }
+</div>

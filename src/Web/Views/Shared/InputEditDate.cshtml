@@ -1,0 +1,24 @@
+@model ValueTuple<string, string, DateTime?>
+
+@{
+    var propertyName = Model.Item1;
+    var propertyText = Model.Item2;
+    var dateValue = Model.Item3;
+    var formattedDate = dateValue?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("th-TH"));
+    // hierarchy input binding  propertyName => Properties_2__PropertyDate
+}
+
+<div class="form-group">
+    <label>@propertyText</label>
+    <input type="text" data-provide="datepicker" data-date-language="th-th" data-date-format="dd/mm/yyyy"
+           class="form-control" value="@formattedDate" id="@propertyName" name="@propertyName">
+    @if (ViewData.ModelState[propertyName]?.Errors.Count > 0)
+    {
+    <span class="text-danger">
+            @foreach (var error in ViewData.ModelState[propertyName]!.Errors)
+        {
+        @error.ErrorMessage
+        }
+        </span>
+    }
+</div>

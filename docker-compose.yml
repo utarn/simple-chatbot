@@ -1,0 +1,44 @@
+services:
+  chatbot:
+    build: .
+    image: utarn/chatbot
+    restart: always
+    ports:
+      - "8003:80"
+    depends_on:
+      - database
+      - redis
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "http://+:80"
+
+  database:
+    image: pgvector/pgvector:pg17
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chatbot-lite
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  seq:
+    image: datalust/seq:latest
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "8080:80"   # Seq UI port
+    volumes:
+      - seq_data:/data
+
+volumes:
+  db_data:
+  redis_data:
+  seq_data:

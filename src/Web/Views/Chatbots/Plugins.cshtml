@@ -1,0 +1,93 @@
+@using ChatbotApi.Application.Chatbots.Queries.GetPluginByChatBotQuery
+@using ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery
+@model List<PluginViewModel>
+@inject ILocalizerService L
+@{
+    var info = (ViewData["Info"] as ChatbotSingleViewModel)!;
+    ViewData["Title"] = "ปลั๊กอินของ" + info.Name;
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="mb-3 text-white">
+            <i class="border-radius-lg shadow-sm material-icons">extension</i> @ViewData["Title"]
+        </h3>
+    </div>
+</div>
+
+<div class="row" id="contentBody">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex justify-content-start gx-2">
+                    <i class="material-icons pb-2">extension</i>
+                    <h6>
+                        @ViewData["Title"]
+                    </h6>
+
+                    <a asp-action="Index" class="btn btn-sm bg-gradient-info ms-auto mt-2">
+                        <i class="material-icons">arrow_back</i> ย้อนกลับ
+                    </a>
+                </div>
+            </div>
+            <div class="card-body m-0" id="body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr role="row">
+                            <th>
+                                @(PropertyHelper<PluginViewModel>.GetDisplayName(m => m.PluginName, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<PluginViewModel>.GetDisplayName(m => m.Description, L))
+                            </th>
+                            <th>
+                                @(PropertyHelper<PluginViewModel>.GetDisplayName(m => m.IsEnabled, L))
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <partial name="_PluginRow" model="item"/>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+
+        $(document).on('click', '.toggle-plugin', function () {
+            const button = $(this);
+            const pluginName = button.data('plugin');
+            const chatbotId = button.data('chatbotid');
+
+            const data = JSON.stringify({
+                ChatbotId: chatbotId,
+                PluginName: pluginName,
+            });
+            console.log(data);
+            $.ajax({
+                type: "POST",
+                url: "/Chatbots/TogglePluginState",
+                contentType: "application/json",
+                data: data,
+                success: function (updatedRowHtml) {
+                    console.log(updatedRowHtml);
+                    const rowId = `#row-${pluginName.replace(" ", "")}`;
+                    $(rowId).replaceWith(updatedRowHtml);
+                },
+                error: function () {
+                    alert("Failed to toggle the plugin state.");
+                }
+            });
+        });
+
+    </script>
+}

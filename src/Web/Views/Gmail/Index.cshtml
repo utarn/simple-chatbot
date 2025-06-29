@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Gmail";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4">Gmail</h1>
+            @if (ViewBag.IsAuthorized)
+            {
+                <p class="lead">
+                    You have authorized Gmail access. You can now compose and send emails.
+                </p>
+                <a href="@Url.Action("Compose", "Gmail")" class="btn btn-primary btn-lg">
+                    Compose Email
+                </a>
+            }
+            else
+            {
+                <p class="lead">
+                    To use the Gmail features, you need to authorize access to your Google account.
+                </p>
+                <p>
+                    Please click the button below to start the authorization process.
+                </p>
+                <a href="@Url.Action("Authorize", "Gmail")" class="btn btn-primary btn-lg">
+                    Authorize Gmail
+                </a>
+            }
+            <div class="mt-4">
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @TempData["ErrorMessage"]
+                    </div>
+                }
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success" role="alert">
+                        @TempData["SuccessMessage"]
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
