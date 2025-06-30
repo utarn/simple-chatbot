@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
-using OpenAiService.Interfaces;
+
 using ChatbotApi.Domain.Constants;
 using System.Net;
 

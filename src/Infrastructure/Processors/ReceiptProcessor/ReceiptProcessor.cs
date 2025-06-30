@@ -411,35 +411,4 @@ public class ReceiptProcessor : ILineMessageProcessor
         sb.AppendLine($"ชื่อ LINE: {result.LineDisplayName ?? "-"}");
         return sb.ToString();
     }
-
-    // DTOs
-    private class ReceiptResult
-    {
-        [JsonPropertyName("receiptNumber")]
-        public string? ReceiptNumber { get; set; }
-
-        [JsonPropertyName("amount")]
-        public double? Amount { get; set; }
-
-        [JsonPropertyName("lineDisplayName")]
-        public string? LineDisplayName { get; set; }
-    }
-
-    private class OpenAIResponse
-    {
-        [JsonPropertyName("choices")]
-        public List<Choice>? Choices { get; set; }
-    }
-
-    private class Choice
-    {
-        [JsonPropertyName("message")]
-        public MessageContent? Message { get; set; }
-    }
-
-    private class MessageContent
-    {
-        [JsonPropertyName("content")]
-        public string? Content { get; set; }
-    }
 }

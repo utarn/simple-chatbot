@@ -11,7 +11,7 @@ using ChatbotApi.Domain.Constants;
 using Microsoft.Extensions.Configuration;
 
 using Microsoft.EntityFrameworkCore;
-using OpenAiService.Interfaces;
+
 
 namespace ChatbotApi.Infrastructure.Processors.CheckCheatOnlineProcessor;
 

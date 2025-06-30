@@ -11,7 +11,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
-using OpenAiService.Interfaces;
+
 using OpenAiService.Splitters;
 
 #pragma warning disable CS8604 // Possible null reference argument.

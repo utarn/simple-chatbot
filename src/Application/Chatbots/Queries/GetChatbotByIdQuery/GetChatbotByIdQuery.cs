@@ -1,4 +1,4 @@
-using OpenAiService.Interfaces;
+
 using Microsoft.Extensions.Logging;
 
 namespace ChatbotApi.Application.Chatbots.Queries.GetChatbotByIdQuery;

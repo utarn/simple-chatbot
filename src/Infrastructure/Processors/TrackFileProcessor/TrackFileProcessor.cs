@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using ChatbotApi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using OpenAiService.Interfaces;
+
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;

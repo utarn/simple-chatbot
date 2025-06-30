@@ -6,7 +6,7 @@ using ChatbotApi.Domain.Entities;
 using ChatbotApi.Domain.Enums;
 using ChatbotApi.Domain.Settings;
 using Microsoft.EntityFrameworkCore;
-using OpenAiService.Interfaces;
+
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
 

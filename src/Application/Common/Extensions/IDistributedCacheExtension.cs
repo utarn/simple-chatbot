@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace ChatbotApi.Application.Common.Extensions;
 
-public static class CacheExtension
+public static class IDistributedCacheExtension
 {
     public static async Task SetObjectAsync<T>(this IDistributedCache cache, string id, T value,
         double lifespan = 14400, bool sliding = true, bool preserve = true)

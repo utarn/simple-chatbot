@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Incoming Request Details";
-    string prettifiedJson = null;
+    string? prettifiedJson = null;
     if (!string.IsNullOrWhiteSpace(Model.Raw))
     {
         try

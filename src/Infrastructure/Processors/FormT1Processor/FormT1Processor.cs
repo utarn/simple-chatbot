@@ -15,7 +15,7 @@ using iText.Kernel.Pdf.Canvas;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using OpenAiService.Interfaces;
+
 
 // ReSharper disable NotResolvedInText
 

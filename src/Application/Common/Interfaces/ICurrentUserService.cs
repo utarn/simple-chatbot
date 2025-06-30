@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Http;
 
 namespace ChatbotApi.Application.Common.Interfaces;
 

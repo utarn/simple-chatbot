@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using OpenAiService.Interfaces;
+
 
 namespace ChatbotApi.Application.Common.Models;
 

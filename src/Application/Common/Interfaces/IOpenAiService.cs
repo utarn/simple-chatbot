@@ -1,5 +1,5 @@
 using ChatbotApi.Application.Common.Models;
-using OpenAiService.Interfaces;
+
 using Pgvector;
 
 namespace ChatbotApi.Application.Common.Interfaces;

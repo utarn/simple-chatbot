@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace OpenAiService.Interfaces;
+namespace ChatbotApi.Application.Common.Models;
 
 public class WebSearchOption
 {
