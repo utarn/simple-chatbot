@@ -1,10 +1,7 @@
-﻿namespace ChatbotApi.Application.Informations.Queries.GetAllTextByFileHashQuery;
+﻿using ChatbotApi.Application.Common.Models;
 
-public class PageData
-{
-    public string Text { get; set; }
-    public string ImageBase64 { get; set; } 
-}
+namespace ChatbotApi.Application.Informations.Queries.GetAllTextByFileHashQuery;
+
 public class GetAllTextByFileHashQuery : IRequest<PageData>
 {
     public string Id { get; set; } = null!;

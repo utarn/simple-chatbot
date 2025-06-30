@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using ChatbotApi.Application.Common.Models;
 
 namespace ChatbotApi.Application.Member.Commands.LoginCommand
 {
@@ -14,13 +15,6 @@ namespace ChatbotApi.Application.Member.Commands.LoginCommand
             Password = password;
             ReturnUrl = returnUrl;
         }
-    }
-
-    public class LoginResult
-    {
-        public bool Success { get; set; }
-        public string? RedirectUrl { get; set; }
-        public string? ErrorMessage { get; set; }
     }
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
