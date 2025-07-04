@@ -27,6 +27,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<TrackFile> TrackFiles => Set<TrackFile>();
     public DbSet<DriveSetting> DriveSettings => Set<DriveSetting>();
     public DbSet<IncomingRequest> IncomingRequests => Set<IncomingRequest>();
+    public DbSet<PlayList> PlayLists => Set<PlayList>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

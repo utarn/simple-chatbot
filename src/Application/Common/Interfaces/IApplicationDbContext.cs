@@ -20,5 +20,6 @@ public interface IApplicationDbContext
     DbSet<DriveSetting> DriveSettings { get; }
     DbSet<TrackFile> TrackFiles { get; }
     DbSet<IncomingRequest> IncomingRequests { get; }
+    DbSet<PlayList> PlayLists { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

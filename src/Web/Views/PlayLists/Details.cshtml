@@ -1,0 +1,74 @@
+@using ChatbotApi.Application.PlayLists.Queries.GetPlayListByIdQuery
+@model PlayListDetailViewModel
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "รายละเอียดเพลง";
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="mb-3 text-white">
+            <i class="border-radius-lg shadow-sm material-icons">music_note</i> @ViewData["Title"]
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex gx-2">
+                    <i class="material-icons pb-2">music_note</i>
+                    <h6>@ViewData["Title"] - @Model.MusicName</h6>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">ID</label>
+                            <input type="text" class="form-control" value="@Model.Id" readonly />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">@(PropertyHelper<PlayListDetailViewModel>.GetDisplayName(m =>
+                                                                m.CreatedDate, L))</label>
+                            <input type="text" class="form-control"
+                                value="@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">@(PropertyHelper<PlayListDetailViewModel>.GetDisplayName(m =>
+                                                                m.MusicName, L))</label>
+                            <input type="text" class="form-control" value="@Model.MusicName" readonly />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">@(PropertyHelper<PlayListDetailViewModel>.GetDisplayName(m =>
+                                                                m.AlbumName, L))</label>
+                            <input type="text" class="form-control" value="@Model.AlbumName" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <a asp-controller="PlayLists" asp-action="Edit" asp-route-Id="@Model.Id"
+                            class="btn bg-gradient-warning">
+                            <i class="material-icons">edit</i> แก้ไข
+                        </a>
+                        <a asp-controller="PlayLists" asp-action="Index" class="btn bg-gradient-secondary">
+                            <i class="material-icons">arrow_back</i> กลับ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

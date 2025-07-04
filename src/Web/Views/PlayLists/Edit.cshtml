@@ -1,0 +1,66 @@
+@using ChatbotApi.Application.PlayLists.Commands.EditPlayListCommand
+@using ChatbotApi.Application.PlayLists.Queries.GetPlayListByIdQuery
+@model EditPlayListCommand
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "แก้ไขเพลง";
+    var info = (PlayListDetailViewModel)ViewData["Info"];
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="mb-3 text-white">
+            <i class="border-radius-lg shadow-sm material-icons">edit</i> @ViewData["Title"]
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex gx-2">
+                    <i class="material-icons pb-2">music_note</i>
+                    <h6>@ViewData["Title"] - @info.MusicName</h6>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="Id" value="@info.Id" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <partial name="InputEditText"
+                                model="@("MusicName", PropertyHelper<EditPlayListCommand>.GetDisplayName(m => m.MusicName, L), Model?.MusicName ?? info.MusicName)" />
+                        </div>
+                        <div class="col-md-6">
+                            <partial name="InputEditText"
+                                model="@("AlbumName", PropertyHelper<EditPlayListCommand>.GetDisplayName(m => m.AlbumName, L), Model?.AlbumName ?? info.AlbumName)" />
+                        </div>
+                    </div>
+
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">วันที่สร้าง</label>
+                                <input type="text" class="form-control"
+                                    value="@info.CreatedDate.ToString("dd/MM/yyyy HH:mm")" readonly />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="submit" class="btn bg-gradient-primary">
+                                <i class="material-icons">save</i> บันทึก
+                            </button>
+                            <a asp-controller="PlayLists" asp-action="Index" class="btn bg-gradient-secondary">
+                                <i class="material-icons">arrow_back</i> กลับ
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
