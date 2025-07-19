@@ -22,4 +22,12 @@ public abstract class Systems
         { GoldReport, "รายงานราคาทองคำ (Line)" },
         { SummarizeEmail, "สรุปเนื้อหาอีเมล (Line)" }
     };
+    public const string Echo = "EchoProcessor";
+    static Systems()
+    {
+        Plugins = new Dictionary<string, string>(Plugins)
+        {
+            { Echo, "Echo Bot (Line): ตอบกลับข้อความพร้อมวันที่และเวลา" }
+        };
+    }
 }

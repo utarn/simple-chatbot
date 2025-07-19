@@ -49,7 +49,13 @@ public class ModelHarborApiService : IOpenAiService
         {
             var reason = await response.Content.ReadAsStringAsync(cancellationToken);
             _logger.LogError("Failed to call ModelHarbor API: {ResponseText} {Reason}", response.StatusCode, reason);
-            throw new Exception("Failed to call ModelHarbor API");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException("Invalid ModelHarbor API key. Please check your API key configuration.");
+            }
+
+            throw new Exception($"Failed to call ModelHarbor API: {response.StatusCode} - {reason}");
         }
         var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
         return JsonSerializer.Deserialize<OpenAIResponse>(responseText, Options);
