@@ -6,8 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
-using ChatbotApi.Domain.Enums;
+using ChatbotApi.Domain.Constants;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace ChatbotApi.Infrastructure.Processors.EchoProcessor
@@ -16,230 +17,24 @@ namespace ChatbotApi.Infrastructure.Processors.EchoProcessor
     {
         public string Name => Systems.Echo;
 
+        private readonly IDistributedCache _cache;
         private readonly ISystemService _systemService;
-        private readonly ILogger<EchoProcessor> _logger;
-        private readonly IApplicationDbContext _context;
-        private readonly IOpenAiService _openAiService;
 
-        public EchoProcessor(
-            ISystemService systemService,
-            ILogger<EchoProcessor> logger,
-            IApplicationDbContext context,
-            IOpenAiService openAiService)
+        // Product catalog with prices
+        private static readonly Dictionary<string, decimal> ProductCatalog = new(StringComparer.OrdinalIgnoreCase)
         {
+            { "ปลากระป๋อง", 20 },
+            { "ไข่ไก่", 7 },
+            { "น้ำยาล้างจาน", 35 }
+        };
+
+        // Cache key for storing the product user is asking about
+        private const string ProductStateKey = "product_state:{0}";
+
+        public EchoProcessor(IDistributedCache cache, ISystemService systemService)
+        {
+            _cache = cache;
             _systemService = systemService;
-            _logger = logger;
-            _context = context;
-            _openAiService = openAiService;
-        }
-
-        private class SentenceClassificationResult
-        {
-            public string OriginalMessage { get; set; } = string.Empty;
-            public string SentenceType { get; set; } = string.Empty;
-            public double Confidence { get; set; }
-            public string Language { get; set; } = "th";
-            public string Reasoning { get; set; } = string.Empty;
-            public Dictionary<string, object> Metadata { get; set; } = new();
-        }
-
-        private async Task<SentenceClassificationResult> ClassifySentenceWithLLM(string message, int chatbotId, CancellationToken cancellationToken)
-        {
-            var result = new SentenceClassificationResult
-            {
-                OriginalMessage = message,
-                Language = "th"
-            };
-
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                result.SentenceType = "unknown";
-                result.Confidence = 0.0;
-                result.Reasoning = "Empty message";
-                return result;
-            }
-
-            var prompt = $@"Analyze the following Thai text and determine if it is a statement (บอกเล่า) or a question (คำถาม).
-
-Text: ""{message}""
-
-Please respond in JSON format with the following structure:
-{{
-    ""sentenceType"": ""question"" or ""statement"",
-    ""confidence"": 0.0-1.0,
-    ""reasoning"": ""brief explanation in Thai""
-}}
-
-Consider:
-- Thai question particles: ไหม, มั้ย, หรือไม่, หรือเปล่า, etc.
-- Question words: ใคร, อะไร, ที่ไหน, เมื่อไหร่, ทำไม, อย่างไร, etc.
-- Sentence structure and context
-- Presence of question marks";
-
-            var chatbot = await _context.Chatbots
-                .FirstOrDefaultAsync(c => c.Id == chatbotId, cancellationToken);
-
-            if (chatbot == null || string.IsNullOrEmpty(chatbot.LlmKey))
-            {
-                _logger.LogError("Chatbot {ChatbotId} does not have an AI token", chatbotId);
-                // Fallback to simple heuristic
-                var isQuestion = message.Contains("?") ||
-                               message.ToLower().Contains("ไหม") ||
-                               message.ToLower().Contains("มั้ย");
-                result.SentenceType = isQuestion ? "question" : "statement";
-                result.Confidence = 0.5;
-                result.Reasoning = "Fallback classification due to missing AI token";
-                return result;
-            }
-
-            var openAiRequest = new OpenAiRequest
-            {
-                Model = chatbot.ModelName ?? "openai/gpt-4.1",
-                Messages = new List<OpenAIMessage>
-                {
-                    new OpenAIMessage
-                    {
-                        Role = "user",
-                        Content = prompt
-                    }
-                }
-            };
-
-            try
-            {
-                var llmResponse = await _openAiService.GetOpenAiResponseAsync(
-                    openAiRequest,
-                    chatbot.LlmKey,
-                    cancellationToken,
-                    chatbot.ModelName);
-
-                var content = llmResponse?.Choices?.FirstOrDefault()?.Message?.Content;
-
-                if (!string.IsNullOrEmpty(content) && content.Contains("{"))
-                {
-                    try
-                    {
-                        // Extract JSON from response
-                        var startIndex = content.IndexOf('{');
-                        var endIndex = content.LastIndexOf('}');
-                        if (startIndex >= 0 && endIndex > startIndex)
-                        {
-                            var jsonString = content.Substring(startIndex, endIndex - startIndex + 1);
-                            using var jsonDoc = JsonDocument.Parse(jsonString);
-                            var root = jsonDoc.RootElement;
-
-                            if (root.TryGetProperty("sentenceType", out var typeProp))
-                            {
-                                var type = typeProp.GetString()?.ToLower();
-                                result.SentenceType = type == "question" ? "question" : "statement";
-                            }
-                            else
-                            {
-                                result.SentenceType = "statement";
-                            }
-
-                            if (root.TryGetProperty("confidence", out var confProp) &&
-                                confProp.TryGetDouble(out var confidenceValue))
-                            {
-                                result.Confidence = Math.Max(0.0, Math.Min(1.0, confidenceValue));
-                            }
-                            else
-                            {
-                                result.Confidence = 0.8;
-                            }
-
-                            if (root.TryGetProperty("reasoning", out var reasonProp))
-                            {
-                                result.Reasoning = reasonProp.GetString() ?? "LLM classification";
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Fallback if JSON parsing fails
-                        result.SentenceType = message.Contains("?") ? "question" : "statement";
-                        result.Confidence = 0.7;
-                        result.Reasoning = "Fallback classification due to JSON parsing error";
-                    }
-                }
-                else
-                {
-                    // Fallback if no valid JSON response
-                    result.SentenceType = message.Contains("?") ? "question" : "statement";
-                    result.Confidence = 0.6;
-                    result.Reasoning = "Fallback classification due to invalid LLM response";
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error classifying sentence with LLM");
-                // Fallback to simple heuristic
-                var isQuestion = message.Contains("?") ||
-                               message.ToLower().Contains("ไหม") ||
-                               message.ToLower().Contains("มั้ย");
-                result.SentenceType = isQuestion ? "question" : "statement";
-                result.Confidence = 0.5;
-                result.Reasoning = "Fallback classification due to LLM error";
-            }
-
-            // Add metadata
-            var cleanMessage = message.Trim();
-            result.Metadata = new Dictionary<string, object>
-            {
-                ["messageLength"] = cleanMessage.Length,
-                ["hasQuestionMark"] = cleanMessage.EndsWith("?"),
-                ["wordCount"] = cleanMessage.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length,
-                ["classificationMethod"] = "LLM"
-            };
-
-            return result;
-        }
-
-        public async Task<LineReplyStatus> ProcessLineAsync(
-            LineEvent evt,
-            int chatbotId,
-            string message,
-            string userId,
-            string replyToken,
-            CancellationToken cancellationToken = default)
-        {
-            // Get current date/time in Thailand timezone
-            var now = _systemService.UtcNow.AddHours(7); // UTC+7 for Thailand
-            var thaiCulture = new CultureInfo("th-TH");
-            string dateTimeThai = now.ToString("dddd d MMMM yyyy HH:mm:ss", thaiCulture);
-
-            // Classify the sentence using LLM
-            var classification = await ClassifySentenceWithLLM(message, chatbotId, cancellationToken);
-
-            // Create JSON response
-            var jsonResponse = JsonSerializer.Serialize(new
-            {
-                originalMessage = classification.OriginalMessage,
-                sentenceType = classification.SentenceType,
-                confidence = classification.Confidence,
-                language = classification.Language,
-                reasoning = classification.Reasoning,
-                processedAt = dateTimeThai,
-                metadata = classification.Metadata
-            }, new JsonSerializerOptions { WriteIndented = true });
-
-            string replyText = $"ข้อความ: {message}\n\nประเภทประโยค: {(classification.SentenceType == "question" ? "คำถาม" : "การบอกเล่า")}\nความมั่นใจ: {classification.Confidence:P0}\nเหตุผล: {classification.Reasoning}\n\nผลการวิเคราะห์ (JSON):\n```json\n{jsonResponse}\n```\n\nวันที่และเวลา: {dateTimeThai}";
-
-            _logger.LogInformation("EchoProcessor classified message: {Message} as {Type} with {Confidence:P0} confidence using LLM",
-                message, classification.SentenceType, classification.Confidence);
-
-            return new LineReplyStatus
-            {
-                Status = 200,
-                ReplyMessage = new LineReplyMessage
-                {
-                    ReplyToken = replyToken,
-                    Messages = new List<LineMessage>
-                    {
-                        new LineTextMessage { Text = replyText }
-                    }
-                }
-            };
         }
 
         public Task<LineReplyStatus> ProcessLineImageAsync(
@@ -264,6 +59,136 @@ Consider:
                     }
                 }
             });
+        }
+
+        public async Task<LineReplyStatus> ProcessLineAsync(LineEvent evt, int chatbotId, string message, string userId, string replyToken, CancellationToken cancellationToken = default)
+        {
+            // Trim and normalize the message
+            message = message?.Trim() ?? string.Empty;
+
+            // Check if we have a pending product state for this user
+            string productStateKey = string.Format(ProductStateKey, userId);
+            string pendingProduct = await _cache.GetStringAsync(productStateKey, cancellationToken);
+
+            // If we have a pending product state
+            if (!string.IsNullOrEmpty(pendingProduct))
+            {
+                // Try to parse quantity from the message
+                if (int.TryParse(message, out int quantity) && quantity > 0)
+                {
+                    // Calculate total price
+                    decimal unitPrice = ProductCatalog[pendingProduct];
+                    decimal totalPrice = unitPrice * quantity;
+
+                    // Clear the state
+                    await _cache.RemoveAsync(productStateKey, cancellationToken);
+
+                    // Return the price calculation
+                    return new LineReplyStatus
+                    {
+                        Status = 200,
+                        ReplyMessage = new LineReplyMessage
+                        {
+                            ReplyToken = replyToken,
+                            Messages = new List<LineMessage>
+                            {
+                                new LineTextMessage($"{pendingProduct} {quantity} ชิ้น ราคา {totalPrice} บาท")
+                            }
+                        }
+                    };
+                }
+                else
+                {
+                    // The message is not a valid quantity, clear the state and treat as new query
+                    await _cache.RemoveAsync(productStateKey, cancellationToken);
+                }
+            }
+
+            // Check if the message contains a product name and quantity
+            foreach (var product in ProductCatalog.Keys)
+            {
+                if (message.Contains(product))
+                {
+                    // Extract quantity if present
+                    int quantity = ExtractQuantity(message);
+
+                    if (quantity > 0)
+                    {
+                        // Calculate total price
+                        decimal unitPrice = ProductCatalog[product];
+                        decimal totalPrice = unitPrice * quantity;
+
+                        // Return the price calculation
+                        return new LineReplyStatus
+                        {
+                            Status = 200,
+                            ReplyMessage = new LineReplyMessage
+                            {
+                                ReplyToken = replyToken,
+                                Messages = new List<LineMessage>
+                                {
+                                    new LineTextMessage($"{product} {quantity} ชิ้น ราคา {totalPrice} บาท")
+                                }
+                            }
+                        };
+                    }
+                    else
+                    {
+                        // No quantity found, store the product in cache and ask for quantity
+                        await _cache.SetStringAsync(
+                            productStateKey,
+                            product,
+                            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) },
+                            cancellationToken);
+
+                        return new LineReplyStatus
+                        {
+                            Status = 200,
+                            ReplyMessage = new LineReplyMessage
+                            {
+                                ReplyToken = replyToken,
+                                Messages = new List<LineMessage>
+                                {
+                                    new LineTextMessage($"คุณต้องการ {product} กี่ชิ้น?")
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+
+            // No product found in the message
+            return new LineReplyStatus
+            {
+                Status = 200,
+                ReplyMessage = new LineReplyMessage
+                {
+                    ReplyToken = replyToken,
+                    Messages = new List<LineMessage>
+                    {
+                        new LineTextMessage("ขออภัย ฉันไม่เข้าใจคำถาม กรุณาสอบถามเกี่ยวกับสินค้าที่มีอยู่ในร้านค้า")
+                    }
+                }
+            };
+        }
+
+        // Helper method to extract quantity from a message
+        private int ExtractQuantity(string message)
+        {
+            // Look for numbers in the message
+            var numberStrings = System.Text.RegularExpressions.Regex.Matches(message, @"\d+")
+                .Cast<System.Text.RegularExpressions.Match>()
+                .Select(m => m.Value);
+
+            foreach (var numStr in numberStrings)
+            {
+                if (int.TryParse(numStr, out int quantity) && quantity > 0)
+                {
+                    return quantity;
+                }
+            }
+
+            return 0; // No valid quantity found
         }
     }
 }
