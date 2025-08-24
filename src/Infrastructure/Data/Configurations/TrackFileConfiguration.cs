@@ -56,5 +56,11 @@ public class TrackFileConfiguration : IEntityTypeConfiguration<TrackFile>
             .WithMany()
             .HasForeignKey(x => x.ChatbotId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Configure relationship with Contact
+        builder.HasOne(x => x.Contact)
+            .WithMany(x => x.TrackFiles)
+            .HasForeignKey(x => x.ContactId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
