@@ -12,6 +12,7 @@ public abstract class Systems
     public const string TrackFile = "TrackFileProcessor";
     public const string SummarizeEmail = "SummarizeEmail";
     public const string ReadCode = "ReadCode";
+    public const string ReadImage = "ReadImage";
     public static readonly IReadOnlyDictionary<string, string> Plugins = new Dictionary<string, string>
     {
         { CustomJSON, "เปิดการใช้งาน Line Flex หรือ Custom JSON (Line, GoogleChat)" },
@@ -22,7 +23,8 @@ public abstract class Systems
         { TrackFile, "จัดการไฟล์แนบ (Line)" },
         { GoldReport, "รายงานราคาทองคำ (Line)" },
         { SummarizeEmail, "สรุปเนื้อหาอีเมล (Line)" },
-        { ReadCode, "อ่าน QR Code และ Barcode (Line)" }
+        { ReadCode, "อ่าน QR Code และ Barcode (Line)" },
+        { ReadImage, "วิเคราะห์รูปภาพ (Line)" }
     };
     public const string Echo = "EchoProcessor";
     static Systems()

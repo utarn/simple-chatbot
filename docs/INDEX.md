@@ -22,6 +22,7 @@ ReceiptProcessor: Processes image OCR message.
 CheckCheatOnlineProcessor: Use OpenRouter provider Processes messages, call 3rd party rest api.
 GoldReportProcessor: Processes html content from website and response messages.
 LLamaPassportProcessor: Processes image with matching field and store in google sheet.
+ReadImageProcessor: Processes image and analyze content using LLM.
 FormT1Processor: Processes message with llm to JSON and generate PDF file.
 BookingProcessor: process message with llm and book google calendar.
 ExampleLineEmailProcessor: read email and push message to line.
