@@ -34,7 +34,7 @@ namespace ChatbotApi.Infrastructure.Processors.TrackFileProcessor
         private const string ContactSessionKeyPrefix = "trackfile_contact_";
         private const string ModeKeyPrefix = "trackfile_mode_";
         
-        public string Name => ChatbotApi.Domain.Constants.Systems.TrackFile;
+        public string Name => Systems.TrackFile;
 
         public TrackFileProcessor(
             IMemoryCache memoryCache,
