@@ -6,6 +6,10 @@ namespace ChatbotApi.Application.Common.Interfaces;
 
 public interface IOpenAiService
 {
+    // When you need to send custom message like sending image url, or base64
+    Task<OpenAIResponse?> GetOpenAiResponseAsync(object request, string apiKey,
+        CancellationToken cancellationToken = default, string? model = null);
+
     // Get OpenAI response based on the request, usually used for chatbots.
     // apiKey and model Name are required and usually related to each Chatbot's LlmKey and ModelName.
     Task<OpenAIResponse?> GetOpenAiResponseAsync(OpenAiRequest request, string apiKey,

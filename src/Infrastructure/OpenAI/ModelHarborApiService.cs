@@ -384,10 +384,18 @@ public class ModelHarborApiService : IOpenAiService
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonSerializer.Deserialize<ModelInfoResponseDto>(content, Options);
             var modelList = new List<(string Text, string Value)>();
+            var addedDisplayTexts = new HashSet<string>();
 
             // Add Gemini models first (as per original implementation)
-            modelList.Add(FormatGeminiModel("gemini/gemini-2.0-flash", 0.000000200, 0.000000600));
-            modelList.Add(FormatGeminiModel("gemini/gemini-2.5-pro", 0.00000150, 0.00001250));
+            var geminiFlash = FormatGeminiModel("gemini/gemini-2.0-flash", 0.000000200, 0.000000600);
+            var geminiFlashDisplayText = geminiFlash.Text;
+            modelList.Add(geminiFlash);
+            addedDisplayTexts.Add(geminiFlashDisplayText);
+
+            var geminiPro = FormatGeminiModel("gemini/gemini-2.5-pro", 0.00000150, 0.00001250);
+            var geminiProDisplayText = geminiPro.Text;
+            modelList.Add(geminiPro);
+            addedDisplayTexts.Add(geminiProDisplayText);
 
             // Process models from API response
             if (result?.Data != null)
@@ -401,7 +409,61 @@ public class ModelHarborApiService : IOpenAiService
                     var formattedModel = FormatModelDisplay(model);
                     if (formattedModel.HasValue)
                     {
+                        var displayText = formattedModel.Value.Text;
+                        var originalDisplayText = displayText;
+                        var counter = 1;
+                        
+                        // Check for duplicates and make display text distinctive
+                        while (addedDisplayTexts.Contains(displayText))
+                        {
+                            // Try to use LiteLlmParams model name if available to make it distinctive
+                            if (!string.IsNullOrEmpty(model.LiteLlmParams?.Model) && model.LiteLlmParams.Model != model.ModelName)
+                            {
+                                // Extract cost information from original display text
+                                var costInfoStart = originalDisplayText.IndexOf(" ($");
+                                if (costInfoStart > 0)
+                                {
+                                    var modelNamePart = originalDisplayText.Substring(0, costInfoStart);
+                                    var costInfoPart = originalDisplayText.Substring(costInfoStart);
+                                    displayText = $"{modelNamePart} ({model.LiteLlmParams.Model}){costInfoPart}";
+                                }
+                                else
+                                {
+                                    displayText = $"{originalDisplayText} ({model.LiteLlmParams.Model})";
+                                }
+                            }
+                            else
+                            {
+                                // Fallback to adding a counter
+                                var costInfoStart = originalDisplayText.IndexOf(" ($");
+                                if (costInfoStart > 0)
+                                {
+                                    var modelNamePart = originalDisplayText.Substring(0, costInfoStart);
+                                    var costInfoPart = originalDisplayText.Substring(costInfoStart);
+                                    displayText = $"{modelNamePart} ({counter}){costInfoPart}";
+                                }
+                                else
+                                {
+                                    displayText = $"{originalDisplayText} ({counter})";
+                                }
+                                counter++;
+                            }
+                            
+                            // If even the modified display text exists, continue the loop
+                            if (!addedDisplayTexts.Contains(displayText))
+                            {
+                                break;
+                            }
+                        }
+                        
+                        // If we had to modify the display text, update the formatted model
+                        if (displayText != originalDisplayText)
+                        {
+                            formattedModel = (displayText, formattedModel.Value.Value);
+                        }
+                        
                         modelList.Add(formattedModel.Value);
+                        addedDisplayTexts.Add(displayText);
                     }
                 }
             }
@@ -443,5 +505,56 @@ public class ModelHarborApiService : IOpenAiService
         var displayText = $"{model.ModelName} (${inputCostPerMillion:F2} / ${outputCostPerMillion:F2})";
 
         return (displayText, model.ModelName);
+    }
+
+    public async Task<OpenAIResponse?> GetOpenAiResponseAsync(object request, string apiKey, CancellationToken cancellationToken = default, string? model = null)
+    {
+        var httpClient = _httpClientFactory.CreateClient();
+        httpClient.Timeout = TimeSpan.FromMinutes(5);
+        httpClient.BaseAddress = new Uri(_baseUrl);
+        httpClient.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+
+        // Serialize the request object to JSON
+        var jsonRequest = JsonSerializer.Serialize(request, Options);
+        
+        // If a model parameter is provided, we need to ensure it's included in the request
+        if (!string.IsNullOrEmpty(model))
+        {
+            // Parse the JSON and add/modify the model property
+            using var jsonDoc = JsonDocument.Parse(jsonRequest);
+            var root = jsonDoc.RootElement;
+            
+            // Create a new JSON object with the model property
+            var modifiedRequest = new Dictionary<string, object>();
+            
+            // Copy all existing properties
+            foreach (var property in root.EnumerateObject())
+            {
+                modifiedRequest[property.Name] = JsonSerializer.Deserialize<object>(property.Value.GetRawText());
+            }
+            
+            // Set or override the model property
+            modifiedRequest["model"] = model;
+            
+            jsonRequest = JsonSerializer.Serialize(modifiedRequest, Options);
+        }
+
+        var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("chat/completions", content, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var reason = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError("Failed to call ModelHarbor API: {ResponseText} {Reason}", response.StatusCode, reason);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException("Invalid ModelHarbor API key. Please check your API key configuration.");
+            }
+
+            throw new Exception($"Failed to call ModelHarbor API: {response.StatusCode} - {reason}");
+        }
+        var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
+        return JsonSerializer.Deserialize<OpenAIResponse>(responseText, Options);
     }
 }
