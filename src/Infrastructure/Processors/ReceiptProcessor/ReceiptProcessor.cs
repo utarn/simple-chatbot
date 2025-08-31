@@ -15,7 +15,8 @@ namespace ChatbotApi.Infrastructure.Processors.ReceiptProcessor;
 
 public class ReceiptProcessor : ILineMessageProcessor
 {
-    public string Name => Systems.Receipt;
+    public string Name => "Receipt";
+    public string Description => "สร้างใบเสร็จรับเงิน (Line)";
 
     private readonly IApplicationDbContext _context;
     private readonly IHttpClientFactory _httpClientFactory;

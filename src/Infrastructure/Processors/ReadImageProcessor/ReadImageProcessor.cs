@@ -15,7 +15,8 @@ namespace ChatbotApi.Infrastructure.Processors.ReadImageProcessor
 {
     public class ReadImageProcessor : ILineMessageProcessor
     {
-        public string Name => Systems.ReadImage;
+        public string Name => "ReadImage";
+        public string Description => "วิเคราะห์รูปภาพ (Line)";
 
         private readonly IOpenAiService _openAiService;
         private readonly IApplicationDbContext _context;

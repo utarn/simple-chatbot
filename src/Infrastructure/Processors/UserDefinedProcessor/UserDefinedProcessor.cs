@@ -16,7 +16,8 @@ public class UserDefinedProcessor : ILineMessageProcessor
         _context = context;
     }
 
-    public string Name => Systems.CustomJSON;
+    public string Name => "CustomJSON";
+    public string Description => "เปิดการใช้งาน Line Flex หรือ Custom JSON (Line, GoogleChat)";
 
     public async Task<LineReplyStatus> ProcessLineAsync(LineEvent evt, int chatbotId, string message, string userId, string replyToken,
         CancellationToken cancellationToken = default)

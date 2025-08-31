@@ -15,7 +15,8 @@ namespace ChatbotApi.Infrastructure.Processors.EchoProcessor
 {
     public class EchoProcessor : ILineMessageProcessor
     {
-        public string Name => Systems.Echo;
+        public string Name => "Echo";
+        public string Description => "Echo Bot (Line): ตอบกลับข้อความพร้อมวันที่และเวลา";
 
         private readonly IDistributedCache _cache;
         private readonly ISystemService _systemService;

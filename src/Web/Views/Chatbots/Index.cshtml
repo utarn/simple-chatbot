@@ -219,14 +219,11 @@
                                             </a>
                                         </ul>
                                     </div>
-                                    @if (item.Plugins.Contains(Systems.CustomJSON))
-                                    {
-                                        <a asp-controller="Chatbots" asp-action="FlexMessage"
-                                           asp-route-ChatBotId="@item.Id"
-                                           class="btn bg-gradient-info">
-                                            ข้อความอัตโนมัติ
-                                        </a>
-                                    }
+                                    <a asp-controller="Chatbots" asp-action="FlexMessage"
+                                        asp-route-ChatBotId="@item.Id"
+                                        class="btn bg-gradient-info">
+                                        ข้อความอัตโนมัติ
+                                    </a>
 
                                     @if (item.CanDelete)
                                     {

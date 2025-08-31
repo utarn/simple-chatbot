@@ -15,7 +15,8 @@ namespace ChatbotApi.Infrastructure.Processors.ReadCodeProcessor
 {
     public class ReadCodeProcessor : ILineMessageProcessor
     {
-        public string Name => Systems.ReadCode;
+        public string Name => "ReadCode";
+        public string Description => "อ่าน QR Code และ Barcode (Line)";
 
         private readonly ILogger<ReadCodeProcessor> _logger;
 

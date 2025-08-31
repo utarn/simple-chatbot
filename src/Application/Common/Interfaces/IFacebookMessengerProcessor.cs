@@ -5,6 +5,7 @@ namespace ChatbotApi.Application.Common.Interfaces;
 public interface IFacebookMessengerProcessor
 {
     string Name { get; }
+    string Description { get; }
     
     Task<FacebookReplyStatus> ProcessFacebookAsync(int chatbotId, string message, string userId,
         CancellationToken cancellationToken = default);

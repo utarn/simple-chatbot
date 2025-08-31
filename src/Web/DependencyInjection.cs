@@ -1,10 +1,11 @@
-﻿using System.Net;
+using System.Net;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using Azure.Identity;
 using ChatbotApi.Application.Common.Interfaces;
+using ChatbotApi.Application.Common.Services;
 using ChatbotApi.Infrastructure.Data;
 using ChatbotApi.Web.Services;
 using FluentValidation.AspNetCore;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddDatabaseDeveloperPageExceptionFilter();
 
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddSingleton<IPluginDiscoveryService, PluginDiscoveryService>();
 
         services.AddHttpContextAccessor();
 

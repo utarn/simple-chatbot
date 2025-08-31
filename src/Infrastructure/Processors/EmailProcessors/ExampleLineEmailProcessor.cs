@@ -3,15 +3,19 @@ using ChatbotApi.Domain.Constants;
 using ChatbotApi.Domain.Enums;
 using ChatbotApi.Domain.Models;
 using Microsoft.EntityFrameworkCore;
-
+using ChatbotApi.Application.Common.Attributes;
+ 
 namespace ChatbotApi.Infrastructure.Processors.EmailProcessors;
-
+ 
 /// <summary>
-/// Example implementation of ILineEmailProcessor that demonstrates email processing for Line messaging.
-/// This processor handles emails based on subject keywords and sends Line messages directly.
-/// </summary>
-public class ExampleLineEmailProcessor  : ILineEmailProcessor
+ /// Example implementation of ILineEmailProcessor that demonstrates email processing for Line messaging.
+ /// This processor handles emails based on subject keywords and sends Line messages directly.
+ /// </summary>
+ [Processor("SummarizeEmail", "สรุปเนื้อหาอีเมล (Line)")]
+ public class ExampleLineEmailProcessor  : ILineEmailProcessor
 {
+    public string Description => "สรุปเนื้อหาอีเมล (Line)";
+    
     private readonly ILogger<ExampleLineEmailProcessor> _logger;
     private readonly ILineMessenger _lineMessenger;
     private readonly IChatCompletion _chatCompletion;
@@ -45,7 +49,7 @@ public class ExampleLineEmailProcessor  : ILineEmailProcessor
                 var chatbot = await _dbContext.Chatbots
                     .Include(c => c.ChatbotPlugins)
                     .FirstOrDefaultAsync(c =>
-                        c.ChatbotPlugins.Any(p => p.PluginName == Systems.SummarizeEmail),
+                        c.ChatbotPlugins.Any(p => p.PluginName == "SummarizeEmail"),
                         cancellationToken);
 
                 if (chatbot == null)

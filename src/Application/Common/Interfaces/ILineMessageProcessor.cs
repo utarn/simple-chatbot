@@ -5,8 +5,9 @@ namespace ChatbotApi.Application.Common.Interfaces;
 public interface ILineMessageProcessor
 {
     // All Processors need to be registered in Systems.cs, Name should be referenced to variable in Systems
-    // There is no need for implementation to register in dependency injection, it will be done automatically 
+    // There is no need for implementation to register in dependency injection, it will be done automatically
     string Name { get; }
+    string Description { get; }
 
     Task<LineReplyStatus> ProcessLineAsync(LineEvent evt, int chatbotId, string message, string userId, string replyToken,
         CancellationToken cancellationToken = default);

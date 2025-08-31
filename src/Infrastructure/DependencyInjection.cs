@@ -1,7 +1,8 @@
-﻿using System.Net;
+using System.Net;
 using System.Threading.Channels;
 using ChatbotApi.Application.Chatbots.Commands.CreatePreMessageFromFileCommand;
 using ChatbotApi.Application.Common.Extensions;
+using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Domain.Entities;
 using ChatbotApi.Domain.Models;
 using ChatbotApi.Domain.Settings;
@@ -137,7 +138,15 @@ public static class DependencyInjection
         {
             services.AddScoped(typeof(IPostProcessor), type);
         }
-
+ 
+        // Automatically register all IPreProcessor implementations
+        var preProcessorTypes = typeof(DependencyInjection).Assembly.GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && typeof(IPreProcessor).IsAssignableFrom(t));
+        foreach (var type in preProcessorTypes)
+        {
+            services.AddScoped(typeof(IPreProcessor), type);
+        }
+ 
         // Automatically register all ILineEmailProcessor implementations
         var lineEmailProcessorTypes = typeof(DependencyInjection).Assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && typeof(ILineEmailProcessor).IsAssignableFrom(t));

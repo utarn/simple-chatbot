@@ -17,7 +17,8 @@ namespace ChatbotApi.Infrastructure.Processors.CheckCheatOnlineProcessor;
 
 public class CheckCheatOnlineProcessor : ILineMessageProcessor, IOpenAiMessageProcessor
 {
-    public string Name => Systems.CheckCheatOnline;
+    public string Name => "CheckCheatOnline";
+    public string Description => "ตรวจสอบการโกงออนไลน์ (Line)";
 
     private readonly IApplicationDbContext _context;
     private readonly IHttpClientFactory _httpClientFactory;

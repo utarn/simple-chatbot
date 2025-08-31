@@ -23,7 +23,8 @@ namespace ChatbotApi.Infrastructure.Processors.FormT1Processor;
 
 public class FormT1Processor : ILineMessageProcessor
 {
-    public string Name => Systems.FormT1;
+    public string Name => "FormT1";
+    public string Description => "สร้างใบลาป่วย ลาพักผ่อน ลาคลอดบุตร (Line)";
 
     private readonly IApplicationDbContext _context;
     private readonly IHttpClientFactory _httpClientFactory;

@@ -24,7 +24,8 @@ public class GoldReportProcessor : ILineMessageProcessor
         _context = context;
     }
 
-    public string Name => Systems.GoldReport;
+    public string Name => "GoldReport";
+    public string Description => "รายงานราคาทองคำ (Line)";
     private const string Prompt = """
   You are an expert in parsing HTML and extracting structured data. Your task is to extract gold price information from the provided HTML snippet and convert it into a JSON object.
 

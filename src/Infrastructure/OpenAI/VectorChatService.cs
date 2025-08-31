@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using ChatbotApi.Application.Common.Exceptions;
 using ChatbotApi.Application.Common.Models;
+using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Domain.Entities;
 using ChatbotApi.Domain.Enums;
 using ChatbotApi.Domain.Settings;
@@ -18,11 +19,13 @@ public class VectorChatService : IChatCompletion
     private readonly ISystemService _systemService;
     private readonly IOpenAiService _openAiService;
     private readonly ILogger<VectorChatService> _logger;
+    private readonly IEnumerable<IPreProcessor> _preProcessors;
     private readonly IEnumerable<IPostProcessor> _postProcessors;
     private readonly IEnumerable<ISuggestionProcessor> _postSuggestionProcessors;
-
+ 
     public VectorChatService(IApplicationDbContext context, ISystemService systemService,
         IOpenAiService openAiService, ILogger<VectorChatService> logger,
+        IEnumerable<IPreProcessor> preProcessors,
         IEnumerable<IPostProcessor> postProcessors,
         IEnumerable<ISuggestionProcessor> postSuggestionProcessors)
     {
@@ -30,6 +33,7 @@ public class VectorChatService : IChatCompletion
         _systemService = systemService;
         _openAiService = openAiService;
         _logger = logger;
+        _preProcessors = preProcessors;
         _postProcessors = postProcessors;
         _postSuggestionProcessors = postSuggestionProcessors;
     }
@@ -61,13 +65,33 @@ public class VectorChatService : IChatCompletion
         {
             toSendMessage.Add(new OpenAIMessage() { Role = "system", Content = chatbot.SystemRole });
         }
-
+ 
+        // Run pre-processors (if any) and append their returned OpenAIMessage(s)
+        if (_preProcessors != null)
+        {
+            foreach (var preProcessor in _preProcessors)
+            {
+                try
+                {
+                    var preMessage = await preProcessor.PreProcessAsync(userId, messageText, cancellationToken);
+                    if (preMessage != null)
+                    {
+                        toSendMessage.Add(preMessage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error running pre processor {Processor}", preProcessor.GetType().FullName);
+                }
+            }
+        }
+ 
         var context = """
                       - เพื่อให้คุณเข้าใจบริบทเวลา วันปัจจุบันในประเทศไทย คือ %DATE%
                       - เวลาที่ให้ข้อมูลอยู่ในรูปแบบ d MMMM yyyy เป็นปีพุทธศักราช (+543)
                       - คุณจะไม่ตอบคำถามเกี่ยวกับโมเดลที่คุณทำงานอยู่ หรือข้อมูลเกี่ยวกับ LLM หรือ Generative AI
                       """;
-
+ 
         toSendMessage.Add(new OpenAIMessage()
         {
             Role = "user",
