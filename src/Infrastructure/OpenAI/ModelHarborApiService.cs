@@ -400,12 +400,23 @@ public class ModelHarborApiService : IOpenAiService
             // Process models from API response
             if (result?.Data != null)
             {
+                // Use a HashSet to track processed model names to avoid duplicates
+                var processedModelNames = new HashSet<string>();
+                
                 foreach (var model in result.Data)
                 {
                     if (model.ModelName.Contains("baai"))
                     {
                         continue;
                     }
+                    
+                    // Skip duplicate model names - take the first occurrence only
+                    if (processedModelNames.Contains(model.ModelName))
+                    {
+                        continue;
+                    }
+                    processedModelNames.Add(model.ModelName);
+                    
                     var formattedModel = FormatModelDisplay(model);
                     if (formattedModel.HasValue)
                     {
@@ -414,10 +425,16 @@ public class ModelHarborApiService : IOpenAiService
                         var counter = 1;
                         
                         // Check for duplicates and make display text distinctive
-                        while (addedDisplayTexts.Contains(displayText))
+                        // Add safety limit to prevent infinite loop
+                        var maxAttempts = 100;
+                        var attempts = 0;
+                        
+                        while (addedDisplayTexts.Contains(displayText) && attempts < maxAttempts)
                         {
+                            attempts++;
+                            
                             // Try to use LiteLlmParams model name if available to make it distinctive
-                            if (!string.IsNullOrEmpty(model.LiteLlmParams?.Model) && model.LiteLlmParams.Model != model.ModelName)
+                            if (attempts == 1 && !string.IsNullOrEmpty(model.LiteLlmParams?.Model) && model.LiteLlmParams.Model != model.ModelName)
                             {
                                 // Extract cost information from original display text
                                 var costInfoStart = originalDisplayText.IndexOf(" ($");
@@ -448,12 +465,12 @@ public class ModelHarborApiService : IOpenAiService
                                 }
                                 counter++;
                             }
-                            
-                            // If even the modified display text exists, continue the loop
-                            if (!addedDisplayTexts.Contains(displayText))
-                            {
-                                break;
-                            }
+                        }
+                        
+                        // If we still have a duplicate after max attempts, generate a unique identifier
+                        if (addedDisplayTexts.Contains(displayText))
+                        {
+                            displayText = $"{originalDisplayText} ({Guid.NewGuid().ToString("N")[..8]})";
                         }
                         
                         // If we had to modify the display text, update the formatted model

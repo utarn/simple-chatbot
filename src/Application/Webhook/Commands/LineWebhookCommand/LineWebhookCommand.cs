@@ -1,5 +1,7 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Domain.Enums;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -49,6 +51,12 @@ public class LineWebhookCommand : IRequest<LineSendResponse?>
             _lineMessenger = lineMessenger;
             _chatCompletion = chatCompletion;
             _cache = cache;
+        }
+
+        private static string? GetProcessorName(ILineMessageProcessor processor)
+        {
+            var attr = processor.GetType().GetCustomAttribute<ProcessorAttribute>();
+            return attr?.Name;
         }
 
         public async Task<LineSendResponse?> Handle(LineWebhookCommand request, CancellationToken cancellationToken)
@@ -111,7 +119,8 @@ public class LineWebhookCommand : IRequest<LineSendResponse?>
                             {
                                 foreach (ILineMessageProcessor process in _messageProcessors)
                                 {
-                                    if (!plugins.Contains(process.Name))
+                                    var processorName = GetProcessorName(process);
+                                    if (processorName == null || !plugins.Contains(processorName))
                                     {
                                         continue;
                                     }
@@ -148,7 +157,8 @@ public class LineWebhookCommand : IRequest<LineSendResponse?>
             {
                 foreach (ILineMessageProcessor process in _messageProcessors)
                 {
-                    if (!plugins.Contains(process.Name))
+                    var processorName = GetProcessorName(process);
+                    if (processorName == null || !plugins.Contains(processorName))
                     {
                         continue;
                     }
@@ -178,7 +188,8 @@ public class LineWebhookCommand : IRequest<LineSendResponse?>
             {
                 foreach (ILineMessageProcessor process in _messageProcessors)
                 {
-                    if (!plugins.Contains(process.Name))
+                    var processorName = GetProcessorName(process);
+                    if (processorName == null || !plugins.Contains(processorName))
                     {
                         continue;
                     }
@@ -369,7 +380,8 @@ public class LineWebhookCommand : IRequest<LineSendResponse?>
                         {
                             foreach (ILineMessageProcessor proces in _messageProcessors)
                             {
-                                if (!plugins.Contains(proces.Name))
+                                var processorName = GetProcessorName(proces);
+                                if (processorName == null || !plugins.Contains(processorName))
                                 {
                                     continue;
                                 }
@@ -422,7 +434,8 @@ public class LineWebhookCommand : IRequest<LineSendResponse?>
             {
                 foreach (ILineMessageProcessor process in _messageProcessors)
                 {
-                    if (!plugins.Contains(process.Name))
+                    var processorName = GetProcessorName(process);
+                    if (processorName == null || !plugins.Contains(processorName))
                     {
                         continue;
                     }
@@ -452,7 +465,8 @@ public class LineWebhookCommand : IRequest<LineSendResponse?>
         {
             foreach (ILineMessageProcessor process in _messageProcessors)
             {
-                if (!plugins.Contains(process.Name))
+                var processorName = GetProcessorName(process);
+                if (processorName == null || !plugins.Contains(processorName))
                 {
                     continue;
                 }

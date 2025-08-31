@@ -71,29 +71,22 @@ public class PluginDiscoveryService : IPluginDiscoveryService
                 _logger.LogDebug(ex, "Error when attempting to ensure infrastructure assembly is loaded.");
             }
     
-            // Scan any ChatbotApi.* assemblies (infrastructure and other related assemblies).
-            var assembliesToScan = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(s =>
+            // Scan only a single assembly with fullname starting with ChatbotApi.Infrastructure
+            var targetAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(s =>
                 {
-                    var name = s.GetName().Name ?? string.Empty;
-                    return name.StartsWith("ChatbotApi", StringComparison.OrdinalIgnoreCase);
-                })
-                .ToList();
-    
-            // If nothing matched the ChatbotApi prefix (unlikely), fall back to all loaded assemblies.
-            if (!assembliesToScan.Any())
-            {
-                assembliesToScan = AppDomain.CurrentDomain.GetAssemblies().ToList();
-            }
-    
-            foreach (var assembly in assembliesToScan)
+                    var fullname = s.FullName ?? string.Empty;
+                    return fullname.StartsWith("ChatbotApi.Infrastructure", StringComparison.OrdinalIgnoreCase);
+                });
+
+            if (targetAssembly != null)
             {
                 try
                 {
                     // Find all types that look like processors (class name ends with Processor) and
                     // implement any known processor interface. Include ILineEmailProcessor so email processors
                     // defined in Infrastructure are discovered as well.
-                    var processorTypes = assembly.GetTypes()
+                    var processorTypes = targetAssembly.GetTypes()
                         .Where(type => type.Name.EndsWith("Processor") &&
                                        !type.IsInterface &&
                                        !type.IsAbstract &&
@@ -106,54 +99,22 @@ public class PluginDiscoveryService : IPluginDiscoveryService
                     {
                         try
                         {
-                            // Prefer ProcessorAttribute to avoid activating the type.
+                            // Get ProcessorAttribute - processors must have this attribute to be discovered
                             var attr = processorType.GetCustomAttribute<ProcessorAttribute>();
-                            string? name = null;
-                            string? description = null;
-    
-                            if (attr != null)
-                            {
-                                name = attr.Name;
-                                description = attr.Description;
-                            }
-                            else
-                            {
-                                // Fallback: instantiate only when attribute is not present and try to read properties.
-                                try
-                                {
-                                    var instance = Activator.CreateInstance(processorType);
-    
-                                    if (instance is ILineMessageProcessor lineProcessor)
-                                    {
-                                        name = lineProcessor.Name;
-                                        description = lineProcessor.Description;
-                                    }
-                                    else if (instance is IFacebookMessengerProcessor facebookProcessor)
-                                    {
-                                        name = facebookProcessor.Name;
-                                        description = facebookProcessor.Description;
-                                    }
-                                    // Note: many processors (e.g. ILineEmailProcessor) may rely on the attribute for metadata.
-                                }
-                                catch (Exception instEx)
-                                {
-                                    _logger.LogDebug(instEx, "Failed to instantiate {ProcessorType} while discovering plugin metadata", processorType.FullName);
-                                }
-                            }
-    
-                            if (!string.IsNullOrEmpty(name))
+                            
+                            if (attr != null && !string.IsNullOrEmpty(attr.Name))
                             {
                                 var pluginInfo = new PluginInfo
                                 {
-                                    Name = name,
-                                    Description = description ?? string.Empty,
+                                    Name = attr.Name,
+                                    Description = attr.Description ?? string.Empty,
                                     IsEnabled = true,
                                     ProcessorType = processorType
                                 };
-    
-                                plugins[name] = pluginInfo;
+
+                                plugins[attr.Name] = pluginInfo;
                                 _logger.LogInformation("Discovered plugin: {PluginName} - {Description}",
-                                    name, description);
+                                    attr.Name, attr.Description);
                             }
                         }
                         catch (Exception ex)
@@ -164,11 +125,11 @@ public class PluginDiscoveryService : IPluginDiscoveryService
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
-                    _logger.LogWarning(ex, "Failed to load types from assembly {AssemblyName}", assembly.FullName);
+                    _logger.LogWarning(ex, "Failed to load types from assembly {AssemblyName}", targetAssembly.FullName);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Error processing assembly {AssemblyName}", assembly.FullName);
+                    _logger.LogWarning(ex, "Error processing assembly {AssemblyName}", targetAssembly.FullName);
                 }
             }
         }
@@ -178,6 +139,12 @@ public class PluginDiscoveryService : IPluginDiscoveryService
         }
 
         _logger.LogInformation("Plugin discovery completed. Found {Count} plugins", plugins.Count);
-        return plugins;
+        
+        // Sort plugins by Name in ascending order
+        var sortedPlugins = plugins
+            .OrderBy(kvp => kvp.Value.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        
+        return sortedPlugins;
     }
 }

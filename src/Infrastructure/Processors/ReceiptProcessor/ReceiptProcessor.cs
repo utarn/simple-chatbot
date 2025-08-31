@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Domain.Constants;
 using ChatbotApi.Domain.Entities;
@@ -13,10 +14,9 @@ using ContentResult = ChatbotApi.Infrastructure.Processors.LLamaPassportProcesso
 
 namespace ChatbotApi.Infrastructure.Processors.ReceiptProcessor;
 
+[Processor("Receipt", "สร้างใบเสร็จรับเงิน (Line)")]
 public class ReceiptProcessor : ILineMessageProcessor
 {
-    public string Name => "Receipt";
-    public string Description => "สร้างใบเสร็จรับเงิน (Line)";
 
     private readonly IApplicationDbContext _context;
     private readonly IHttpClientFactory _httpClientFactory;

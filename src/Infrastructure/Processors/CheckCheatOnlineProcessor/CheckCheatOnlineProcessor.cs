@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Domain.Constants;
 using Microsoft.Extensions.Configuration;
@@ -15,10 +16,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatbotApi.Infrastructure.Processors.CheckCheatOnlineProcessor;
 
+[Processor("CheckCheatOnline", "ตรวจสอบการโกงออนไลน์ (Line)")]
 public class CheckCheatOnlineProcessor : ILineMessageProcessor, IOpenAiMessageProcessor
 {
     public string Name => "CheckCheatOnline";
-    public string Description => "ตรวจสอบการโกงออนไลน์ (Line)";
 
     private readonly IApplicationDbContext _context;
     private readonly IHttpClientFactory _httpClientFactory;

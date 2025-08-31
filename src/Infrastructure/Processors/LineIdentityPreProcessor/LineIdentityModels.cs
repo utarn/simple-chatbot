@@ -10,3 +10,10 @@ public class LineUserIdentity
     public string Faculty { get; set; } = string.Empty;
     public string Campus { get; set; } = string.Empty;
 }
+
+public class CachedSheetData
+{
+    public List<LineUserIdentity> Users { get; set; } = new();
+    public DateTime CachedAt { get; set; }
+    public bool IsExpired(TimeSpan expiration) => DateTime.UtcNow - CachedAt > expiration;
+}

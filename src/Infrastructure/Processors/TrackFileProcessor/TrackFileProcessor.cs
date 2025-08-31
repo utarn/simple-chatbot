@@ -1,3 +1,4 @@
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Application.Common.Extensions;
@@ -20,6 +21,7 @@ using Pgvector.EntityFrameworkCore;
 
 namespace ChatbotApi.Infrastructure.Processors.TrackFileProcessor
 {
+    [Processor("TrackFile", "จัดการไฟล์แนบ (Line)")]
     public class TrackFileProcessor : ILineMessageProcessor
     {
         private readonly IMemoryCache _memoryCache;
@@ -33,9 +35,6 @@ namespace ChatbotApi.Infrastructure.Processors.TrackFileProcessor
         private const string SessionKeyPrefix = "trackfile_";
         private const string ContactSessionKeyPrefix = "trackfile_contact_";
         private const string ModeKeyPrefix = "trackfile_mode_";
-        
-        public string Name => "TrackFile";
-        public string Description => "จัดการไฟล์แนบ (Line)";
 
         public TrackFileProcessor(
             IMemoryCache memoryCache,

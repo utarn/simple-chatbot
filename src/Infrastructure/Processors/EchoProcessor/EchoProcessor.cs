@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Domain.Constants;
@@ -13,10 +14,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ChatbotApi.Infrastructure.Processors.EchoProcessor
 {
+    [Processor("Echo", "Echo Bot (Line): ตอบกลับข้อความพร้อมวันที่และเวลา")]
     public class EchoProcessor : ILineMessageProcessor
     {
-        public string Name => "Echo";
-        public string Description => "Echo Bot (Line): ตอบกลับข้อความพร้อมวันที่และเวลา";
 
         private readonly IDistributedCache _cache;
         private readonly ISystemService _systemService;

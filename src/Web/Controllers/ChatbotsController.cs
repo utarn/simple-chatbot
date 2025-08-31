@@ -84,7 +84,14 @@ public class ChatbotsController : MvcController
         catch (ValidationException e)
         {
             e.AddToModelState(ModelState);
-            ViewData["Info"] = await Mediator.Send(query);
+            query.ObtainLogo = true;
+            var info = await Mediator.Send(query);
+            ViewData["Info"] = info;
+            
+            // Get model harbor models and create SelectList with the command's ModelName as selected value
+            var modelHarborModels = await Mediator.Send(new GetModelHarborModelsQuery() { SelectedValue = command.ModelName ?? info.ModelName });
+            ViewData["ModelNameSelectList"] = modelHarborModels;
+            
             return View(command);
         }
     }

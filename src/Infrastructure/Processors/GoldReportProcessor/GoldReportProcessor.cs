@@ -1,3 +1,4 @@
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
 using System.Text;
@@ -11,6 +12,7 @@ using System.Net;
 
 namespace ChatbotApi.Infrastructure.Processors.GoldReportProcessor;
 
+[Processor("GoldReport", "รายงานราคาทองคำ (Line)")]
 public class GoldReportProcessor : ILineMessageProcessor
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -23,9 +25,6 @@ public class GoldReportProcessor : ILineMessageProcessor
         _openAiService = openAiService;
         _context = context;
     }
-
-    public string Name => "GoldReport";
-    public string Description => "รายงานราคาทองคำ (Line)";
     private const string Prompt = """
   You are an expert in parsing HTML and extracting structured data. Your task is to extract gold price information from the provided HTML snippet and convert it into a JSON object.
 

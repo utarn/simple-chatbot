@@ -7,9 +7,6 @@ namespace ChatbotApi.Infrastructure.Processors.LLamaPassportProcessor;
 [Processor("LlamaPassport","Llama Passport (Line)")]
 public class LLamaPassportProcessor : ILineMessageProcessor
 {
-    public string Name => "LlamaPassport";
-    public string Description => "Llama Passport (Line)";
-
     public Task<LineReplyStatus> ProcessLineAsync(LineEvent evt, int chatbotId, string message, string userId,
         string replyToken, CancellationToken cancellationToken = default)
     {

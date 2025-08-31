@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Domain.Constants;
@@ -13,10 +14,9 @@ using ZXing.SkiaSharp;
 
 namespace ChatbotApi.Infrastructure.Processors.ReadCodeProcessor
 {
+    [Processor("ReadCode", "อ่าน QR Code และ Barcode (Line)")]
     public class ReadCodeProcessor : ILineMessageProcessor
     {
-        public string Name => "ReadCode";
-        public string Description => "อ่าน QR Code และ Barcode (Line)";
 
         private readonly ILogger<ReadCodeProcessor> _logger;
 

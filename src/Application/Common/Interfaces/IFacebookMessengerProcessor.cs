@@ -4,8 +4,7 @@ namespace ChatbotApi.Application.Common.Interfaces;
 
 public interface IFacebookMessengerProcessor
 {
-    string Name { get; }
-    string Description { get; }
+    // Use ProcessorAttribute to declare Name and Description instead of properties
     
     Task<FacebookReplyStatus> ProcessFacebookAsync(int chatbotId, string message, string userId,
         CancellationToken cancellationToken = default);

@@ -25,7 +25,7 @@ public class LineIdentityPreProcessor : IPreProcessor
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _googleSheetHelper = new LineIdentityGoogleSheetHelper(logger);
+        _googleSheetHelper = new LineIdentityGoogleSheetHelper(logger, cache);
         _cache = cache;
         _context = context;
     }

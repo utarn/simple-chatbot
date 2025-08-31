@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Webhook.Commands.LineWebhookCommand;
 using ChatbotApi.Domain.Enums;
 using ChatbotApi.Domain.Settings;
@@ -37,6 +39,12 @@ public class FacebookWebhookCommand : IRequest<bool>
             _systemService = systemService;
             _messageProcessors = messageProcessors;
             _chatCompletion = chatCompletion;
+        }
+
+        private static string? GetProcessorName(IFacebookMessengerProcessor processor)
+        {
+            var attr = processor.GetType().GetCustomAttribute<ProcessorAttribute>();
+            return attr?.Name;
         }
 
         public async Task<bool> Handle(FacebookWebhookCommand request, CancellationToken cancellationToken)
@@ -84,7 +92,8 @@ public class FacebookWebhookCommand : IRequest<bool>
 
                     foreach (var process in _messageProcessors)
                     {
-                        if (!plugins.Contains(process.Name))
+                        var processorName = GetProcessorName(process);
+                        if (processorName == null || !plugins.Contains(processorName))
                         {
                             continue;
                         }
@@ -204,7 +213,8 @@ public class FacebookWebhookCommand : IRequest<bool>
                     {
                         foreach (var process in _messageProcessors)
                         {
-                            if (!plugins.Contains(process.Name))
+                            var processorName = GetProcessorName(process);
+                            if (processorName == null || !plugins.Contains(processorName))
                             {
                                 continue;
                             }

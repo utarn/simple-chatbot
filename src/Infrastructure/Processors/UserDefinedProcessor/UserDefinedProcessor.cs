@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Domain.Constants;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatbotApi.Infrastructure.Processors.UserDefinedProcessor;
 
+[Processor("CustomJSON", "เปิดการใช้งาน Line Flex หรือ Custom JSON (Line, GoogleChat)")]
 public class UserDefinedProcessor : ILineMessageProcessor
 {
     private readonly IApplicationDbContext _context;
@@ -15,9 +17,6 @@ public class UserDefinedProcessor : ILineMessageProcessor
     {
         _context = context;
     }
-
-    public string Name => "CustomJSON";
-    public string Description => "เปิดการใช้งาน Line Flex หรือ Custom JSON (Line, GoogleChat)";
 
     public async Task<LineReplyStatus> ProcessLineAsync(LineEvent evt, int chatbotId, string message, string userId, string replyToken,
         CancellationToken cancellationToken = default)

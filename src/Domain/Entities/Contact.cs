@@ -4,7 +4,7 @@ namespace ChatbotApi.Domain.Entities;
 
 public class Contact : BaseAuditableEntity
 {
-    public int Id { get; set; }
+    public new int Id { get; set; }
 
     [MaxLength(100)]
     public required string Name { get; set; }

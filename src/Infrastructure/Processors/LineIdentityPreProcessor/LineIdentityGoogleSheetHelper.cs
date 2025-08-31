@@ -3,6 +3,8 @@ using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using System.Text;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace ChatbotApi.Infrastructure.Processors.LineIdentityPreProcessor;
 
@@ -10,6 +12,9 @@ public class LineIdentityGoogleSheetHelper
 {
     private readonly SheetsService _sheetsService;
     private readonly ILogger<LineIdentityPreProcessor> _logger;
+    private readonly IDistributedCache _cache;
+    private const string CACHE_KEY = "line_identity_sheet_data";
+    private static readonly TimeSpan CACHE_EXPIRATION = TimeSpan.FromMinutes(5);
 
     // Hardcoded sheet ID and service account JSON as requested
     private const string SHEET_ID = "1KQGQAPXBC6CWN0u3vLQlvnzzuCVoEbOk1gEQWxAL-M8";
@@ -30,9 +35,10 @@ public class LineIdentityGoogleSheetHelper
           ""universe_domain"": ""googleapis.com""
         }";
 
-    public LineIdentityGoogleSheetHelper(ILogger<LineIdentityPreProcessor> logger)
+    public LineIdentityGoogleSheetHelper(ILogger<LineIdentityPreProcessor> logger, IDistributedCache cache)
     {
         _logger = logger;
+        _cache = cache;
 
         try
         {
@@ -57,14 +63,35 @@ public class LineIdentityGoogleSheetHelper
         }
     }
 
-    public async Task<LineUserIdentity?> GetUserIdentityAsync(string lineUserId, CancellationToken cancellationToken)
+    private async Task<CachedSheetData?> GetCachedSheetDataAsync(CancellationToken cancellationToken)
     {
-        if (_sheetsService == null)
+        try
         {
-            _logger.LogError("Google Sheets service is not initialized. Cannot get user identity for LineUserId: {LineUserId}", lineUserId);
-            return null;
+            var cachedJson = await _cache.GetStringAsync(CACHE_KEY, cancellationToken);
+            if (!string.IsNullOrEmpty(cachedJson))
+            {
+                var cachedData = JsonSerializer.Deserialize<CachedSheetData>(cachedJson);
+                if (cachedData != null && !cachedData.IsExpired(CACHE_EXPIRATION))
+                {
+                    _logger.LogInformation("Using cached sheet data from {CachedAt}", cachedData.CachedAt);
+                    return cachedData;
+                }
+                else
+                {
+                    _logger.LogInformation("Cached sheet data expired, will refresh");
+                }
+            }
         }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error retrieving cached sheet data");
+        }
+        
+        return null;
+    }
 
+    private async Task<CachedSheetData?> LoadAndCacheSheetDataAsync(CancellationToken cancellationToken)
+    {
         try
         {
             var request = _sheetsService.Spreadsheets.Values.Get(SHEET_ID, RANGE);
@@ -76,13 +103,15 @@ public class LineIdentityGoogleSheetHelper
                 return null;
             }
 
-            // Skip header row (index 0) and search for matching LineUserId
+            var users = new List<LineUserIdentity>();
+
+            // Skip header row (index 0) and process all data rows
             for (int i = 1; i < response.Values.Count; i++)
             {
                 var row = response.Values[i];
-                if (row.Count > 0 && row[0]?.ToString() == lineUserId)
+                if (row.Count > 0 && !string.IsNullOrEmpty(row[0]?.ToString()))
                 {
-                    return new LineUserIdentity
+                    users.Add(new LineUserIdentity
                     {
                         LineUserId = row.Count > 0 ? row[0]?.ToString() ?? "" : "",
                         Initial = row.Count > 1 ? row[1]?.ToString() ?? "" : "",
@@ -91,12 +120,71 @@ public class LineIdentityGoogleSheetHelper
                         Group = row.Count > 4 ? row[4]?.ToString() ?? "" : "",
                         Faculty = row.Count > 5 ? row[5]?.ToString() ?? "" : "",
                         Campus = row.Count > 6 ? row[6]?.ToString() ?? "" : ""
-                    };
+                    });
                 }
             }
 
-            _logger.LogInformation("LineUserId {LineUserId} not found in Google Sheet", lineUserId);
+            var cachedData = new CachedSheetData
+            {
+                Users = users,
+                CachedAt = DateTime.UtcNow
+            };
+
+            // Cache the data
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = CACHE_EXPIRATION
+            };
+
+            var serializedData = JsonSerializer.Serialize(cachedData);
+            await _cache.SetStringAsync(CACHE_KEY, serializedData, options, cancellationToken);
+
+            _logger.LogInformation("Cached {UserCount} users from Google Sheet", users.Count);
+            return cachedData;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load and cache sheet data");
             return null;
+        }
+    }
+
+    public async Task<LineUserIdentity?> GetUserIdentityAsync(string lineUserId, CancellationToken cancellationToken)
+    {
+        if (_sheetsService == null)
+        {
+            _logger.LogError("Google Sheets service is not initialized. Cannot get user identity for LineUserId: {LineUserId}", lineUserId);
+            return null;
+        }
+
+        try
+        {
+            // Try to get cached data first
+            var cachedData = await GetCachedSheetDataAsync(cancellationToken);
+            
+            // If no valid cached data, load from sheet
+            if (cachedData == null)
+            {
+                cachedData = await LoadAndCacheSheetDataAsync(cancellationToken);
+                if (cachedData == null)
+                {
+                    return null;
+                }
+            }
+
+            // Search for user in cached data
+            var userIdentity = cachedData.Users.FirstOrDefault(u => u.LineUserId == lineUserId);
+            
+            if (userIdentity != null)
+            {
+                _logger.LogInformation("Found user identity from cache for LineUserId: {LineUserId}", lineUserId);
+            }
+            else
+            {
+                _logger.LogInformation("LineUserId {LineUserId} not found in cached data", lineUserId);
+            }
+
+            return userIdentity;
         }
         catch (Exception ex)
         {
@@ -133,7 +221,10 @@ public class LineIdentityGoogleSheetHelper
 
             var response = await appendRequest.ExecuteAsync(cancellationToken);
 
-            _logger.LogInformation("Successfully added new user identity to Google Sheet. LineUserId: {LineUserId}, ProfileName: {ProfileName}, Updates: {Updates}",
+            // Invalidate cache when new user is added
+            await _cache.RemoveAsync(CACHE_KEY, cancellationToken);
+
+            _logger.LogInformation("Successfully added new user identity to Google Sheet and invalidated cache. LineUserId: {LineUserId}, ProfileName: {ProfileName}, Updates: {Updates}",
                 lineUserId, profileName, response.Updates?.UpdatedCells);
 
             return true;
@@ -143,6 +234,19 @@ public class LineIdentityGoogleSheetHelper
             _logger.LogError(ex, "Failed to add user identity to Google Sheet. LineUserId: {LineUserId}, ProfileName: {ProfileName}",
                 lineUserId, profileName);
             return false;
+        }
+    }
+
+    public async Task InvalidateCacheAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _cache.RemoveAsync(CACHE_KEY, cancellationToken);
+            _logger.LogInformation("Cache invalidated for line identity sheet data");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error invalidating cache");
         }
     }
 }

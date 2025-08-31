@@ -5,7 +5,7 @@ namespace ChatbotApi.Domain.Entities;
 
 public class TrackFile : BaseAuditableEntity
 {
-    public int Id { get; set; }
+    public new int Id { get; set; }
 
     [MaxLength(100)]
     public required string FileName { get; set; }

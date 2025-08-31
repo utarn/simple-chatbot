@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Domain.Constants;
@@ -13,10 +14,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ChatbotApi.Infrastructure.Processors.ReadImageProcessor
 {
+    [Processor("ReadImage", "วิเคราะห์รูปภาพ (Line)")]
     public class ReadImageProcessor : ILineMessageProcessor
     {
-        public string Name => "ReadImage";
-        public string Description => "วิเคราะห์รูปภาพ (Line)";
 
         private readonly IOpenAiService _openAiService;
         private readonly IApplicationDbContext _context;

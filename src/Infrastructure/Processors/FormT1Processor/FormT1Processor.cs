@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using ChatbotApi.Application.Common.Attributes;
 using ChatbotApi.Application.Common.Interfaces;
 using ChatbotApi.Application.Common.Models;
 using ChatbotApi.Domain.Constants;
@@ -21,10 +22,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace ChatbotApi.Infrastructure.Processors.FormT1Processor;
 
+[Processor("FormT1", "สร้างใบลาป่วย ลาพักผ่อน ลาคลอดบุตร (Line)")]
 public class FormT1Processor : ILineMessageProcessor
 {
-    public string Name => "FormT1";
-    public string Description => "สร้างใบลาป่วย ลาพักผ่อน ลาคลอดบุตร (Line)";
 
     private readonly IApplicationDbContext _context;
     private readonly IHttpClientFactory _httpClientFactory;
