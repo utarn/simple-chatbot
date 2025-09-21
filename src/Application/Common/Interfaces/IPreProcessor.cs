@@ -6,6 +6,7 @@ namespace ChatbotApi.Application.Common.Interfaces;
 
 public interface IPreProcessor
 {
+    string Name { get; }
     /// <summary>
     /// Process incoming user message before chat completion and return an OpenAIMessage to prepend.
     /// Return null if no message should be added.

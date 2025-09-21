@@ -29,6 +29,8 @@ public class LineLocalDatabasePrePreProcessor : IPreProcessor
         _context = context;
     }
 
+    public string Name => "LocalDatabase";
+
     public async Task<OpenAIMessage?> PreProcessAsync(string userId, string messageText, CancellationToken cancellationToken = default)
     {
         // Only process if userId is provided (LINE user ID)

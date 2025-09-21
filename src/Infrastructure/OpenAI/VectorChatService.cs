@@ -67,9 +67,10 @@ public class VectorChatService : IChatCompletion
         }
  
         // Run pre-processors (if any) and append their returned OpenAIMessage(s)
-        if (_preProcessors != null)
+        if (_preProcessors.Any())
         {
-            foreach (var preProcessor in _preProcessors)
+            // Select LocalDatabase pre-processors only
+            foreach (var preProcessor in _preProcessors.Where(p => p.Name == "LocalDatabase"))
             {
                 try
                 {
