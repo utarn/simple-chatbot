@@ -1,0 +1,101 @@
+@model ChatbotApi.Application.UserInternalProfiles.Commands.CreateUserInternalProfileCommand.CreateUserInternalProfileCommand
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "เพิ่มโปรไฟล์ผู้ใช้";
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="mb-3 text-white">
+            <i class="border-radius-lg shadow-sm material-icons">person_add</i> @ViewData["Title"]
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex gx-2">
+                    <i class="material-icons pb-2">person_add</i>
+                    <h6>@ViewData["Title"]</h6>
+                    <a asp-controller="UserInternalProfiles" asp-action="Index"
+                       class="btn btn-sm bg-gradient-secondary ms-auto me-2 mt-2">
+                        <i class="material-icons">arrow_back</i> กลับ
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="LineUserId" class="form-control-label"></label>
+                                <input asp-for="LineUserId" class="form-control" />
+                                <span asp-validation-for="LineUserId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Initial" class="form-control-label"></label>
+                                <input asp-for="Initial" class="form-control" />
+                                <span asp-validation-for="Initial" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="FirstName" class="form-control-label"></label>
+                                <input asp-for="FirstName" class="form-control" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="LastName" class="form-control-label"></label>
+                                <input asp-for="LastName" class="form-control" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Group" class="form-control-label"></label>
+                                <input asp-for="Group" class="form-control" />
+                                <span asp-validation-for="Group" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Faculty" class="form-control-label"></label>
+                                <input asp-for="Faculty" class="form-control" />
+                                <span asp-validation-for="Faculty" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Campus" class="form-control-label"></label>
+                                <input asp-for="Campus" class="form-control" />
+                                <span asp-validation-for="Campus" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="submit" value="บันทึก" class="btn bg-gradient-success" />
+                        <a asp-action="Index" class="btn bg-gradient-secondary">ยกเลิก</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+}

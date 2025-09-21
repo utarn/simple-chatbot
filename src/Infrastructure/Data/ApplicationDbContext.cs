@@ -29,6 +29,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplica
     public DbSet<IncomingRequest> IncomingRequests => Set<IncomingRequest>();
     public DbSet<PlayList> PlayLists => Set<PlayList>();
     public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<UserInternalProfile> UserInternalProfiles => Set<UserInternalProfile>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -22,5 +22,6 @@ public interface IApplicationDbContext
     DbSet<IncomingRequest> IncomingRequests { get; }
     DbSet<PlayList> PlayLists { get; }
     DbSet<Contact> Contacts { get; }
+    DbSet<UserInternalProfile> UserInternalProfiles { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -1,0 +1,109 @@
+@model ChatbotApi.Application.UserInternalProfiles.Queries.GetUserInternalProfileByIdQuery.UserInternalProfileSingleViewModel
+@inject ILocalizerService L
+@{
+    ViewData["Title"] = "รายละเอียดโปรไฟล์ผู้ใช้";
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <h3 class="mb-3 text-white">
+            <i class="border-radius-lg shadow-sm material-icons">visibility</i> @ViewData["Title"]
+        </h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header pb-0 p-3">
+                <div class="d-flex gx-2">
+                    <i class="material-icons pb-2">visibility</i>
+                    <h6>@ViewData["Title"]</h6>
+                    <div class="ms-auto">
+                        <a asp-controller="UserInternalProfiles" asp-action="Edit" asp-route-Id="@Model.Id"
+                           class="btn btn-sm bg-gradient-warning me-2 mt-2">
+                            <i class="material-icons">edit</i> แก้ไข
+                        </a>
+                        <a asp-controller="UserInternalProfiles" asp-action="Index"
+                           class="btn btn-sm bg-gradient-secondary me-2 mt-2">
+                            <i class="material-icons">arrow_back</i> กลับ
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">LINE User ID</label>
+                            <p class="form-control-static">@Model.LineUserId</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">คำนำหน้า</label>
+                            <p class="form-control-static">@(string.IsNullOrEmpty(Model.Initial) ? "-" : Model.Initial)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">ชื่อ</label>
+                            <p class="form-control-static">@Model.FirstName</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-control-label">นามสกุล</label>
+                            <p class="form-control-static">@(string.IsNullOrEmpty(Model.LastName) ? "-" : Model.LastName)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">กลุ่ม</label>
+                            <p class="form-control-static">@(string.IsNullOrEmpty(Model.Group) ? "-" : Model.Group)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">คณะ</label>
+                            <p class="form-control-static">@(string.IsNullOrEmpty(Model.Faculty) ? "-" : Model.Faculty)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-control-label">วิทยาเขต</label>
+                            <p class="form-control-static">@(string.IsNullOrEmpty(Model.Campus) ? "-" : Model.Campus)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label class="form-control-label">ชื่อเต็ม</label>
+                            <p class="form-control-static"><strong>@($"{Model.Initial} {Model.FirstName} {Model.LastName}".Trim())</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control-static {
+    padding: 0.375rem 0;
+    margin-bottom: 0;
+    border: 0;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+}
+</style>
