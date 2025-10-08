@@ -1,62 +1,64 @@
-# Development Environment Setup Script
+# สคริปต์ติดตั้งสภาพแวดล้อมการพัฒนา
 
-This PowerShell script automates the installation of essential development tools on Windows systems.
+สคริปต์ PowerShell นี้จะติดตั้งเครื่องมือพัฒนาที่จำเป็นสำหรับระบบ Windows โดยอัตโนมัติ
 
-## Tools Installed
+## เครื่องมือที่ติดตั้ง
 
 1. .NET 8 SDK
-2. Visual Studio Code
+2. Visual Studio Code (พร้อมส่วนขยายจำเป็น)
 3. Git
 4. Windows Terminal
 5. PowerShell 7
 6. PostgreSQL 17
+7. Docker Desktop
+8. Ngrok
 
-## Requirements
+## ความต้องการระบบ
 
-- Windows Operating System
-- PowerShell 5.0 or higher
-- Internet connection
+- ระบบปฏิบัติการ Windows
+- PowerShell 5.0 หรือสูงกว่า
+- การเชื่อมต่ออินเทอร์เน็ต
 
-## Usage
+## วิธีใช้งาน
 
-### Run with default settings
+### เปิดใช้งานด้วยการตั้งค่าเริ่มต้น
 ```powershell
 .\setup-dev-environment.ps1
 ```
 
-### Run without administrator check
+### เปิดใช้งานโดยไม่ตรวจสอบสิทธิ์ผู้ดูแลระบบ
 ```powershell
 .\setup-dev-environment.ps1 -SkipAdminCheck
 ```
 
-### Force installation without prompts
+### บังคับติดตั้งโดยไม่มีการถาม
 ```powershell
 .\setup-dev-environment.ps1 -Force
 ```
 
-## Administrator Rights
+## สิทธิ์ผู้ดูแลระบบ
 
-For best results, run this script as Administrator:
-1. Right-click on PowerShell
-2. Select "Run as Administrator"
-3. Navigate to the script directory
-4. Execute the script
+เพื่อผลลัพธ์ที่ดีที่สุด ควรเปิดใช้งานสคริปต์นี้ในฐานะผู้ดูแลระบบ:
+1. คลิกขวาที่ PowerShell
+2. เลือก "Run as Administrator"
+3. ไปยังโฟลเดอร์ที่มีสคริปต์
+4. เปิดใช้งานสคริปต์
 
-If the script is not run as Administrator, it will prompt you to continue anyway or cancel the setup.
+หากไม่ได้เปิดใช้งานในฐานะผู้ดูแลระบบ สคริปต์จะถามให้ดำเนินการต่อหรือยกเลิกการติดตั้ง
 
-## How It Works
+## วิธีการทำงาน
 
-The script checks if each tool is already installed before attempting to install it. If a tool is found, it skips that installation.
+สคริปต์จะตรวจสอบว่าติดตั้งเครื่องมือแต่ละอย่างแล้วหรือไม่ก่อนที่จะพยายามติดตั้ง หากพบเครื่องมือแล้วจะข้ามการติดตั้งนั้น
 
-For installation, the script attempts to use package managers in this order:
-1. winget (Windows Package Manager)
+สำหรับการติดตั้ง สคริปต์จะพยายามใช้ตัวจัดการแพ็คเกจตามลำดับนี้:
+1. winget (ตัวจัดการแพ็คเกจ Windows)
 2. Chocolatey
-3. Direct download from official sources
+3. ดาวน์โหลดโดยตรงจากแหล่งที่มา官方
 
-If none of the package managers are available, it falls back to direct downloads.
+หากไม่มีตัวจัดการแพ็คเกจใดๆ จะใช้การดาวน์โหลดโดยตรง
 
-## Notes
+## หมายเหตุ
 
-- The script will download installers to your system's TEMP directory and remove them after installation
-- Some installations may require a system restart to complete properly
-- PostgreSQL installation will require you to set up a password during the setup process if using direct download
+- สคริปต์จะดาวน์โหลดตัวติดตั้งไปยังโฟลเดอร์ TEMP ของระบบและลบออกหลังการติดตั้งเสร็จสิ้น
+- การติดตั้งบางอย่างอาจต้องรีสตาร์ทเครื่องเพื่อให้เสร็จสมบูรณ์
+- การติดตั้ง PostgreSQL จะต้องตั้งรหัสผ่านระหว่างกระบวนการติดตั้งหากใช้การดาวน์โหลดโดยตรง

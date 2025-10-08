@@ -34,8 +34,8 @@ function Install-DotNet8SDK {
     # Download and install .NET 8 SDK
     try {
         # URL for .NET 8 SDK installer
-        $downloadUrl = "https://download.visualstudio.microsoft.com/download/pr/73a9cb7d-65ce-4b03-80f8-9b723730f093/1050b8771123e439890e4d721619d957/dotnet-sdk-8.0.403-win-x64.exe"
-        $installerPath = "$env:TEMP\dotnet-sdk-8.0.403-win-x64.exe"
+        $downloadUrl = "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.414/dotnet-sdk-8.0.414-win-x64.exe"
+        $installerPath = "$env:TEMP\dotnet-sdk-8.0.414-win-x64.exe"
         
         Write-Host "Downloading .NET 8 SDK installer..." -ForegroundColor Cyan
         Invoke-WebRequest -Uri $downloadUrl -OutFile $installerPath -ErrorAction Stop
@@ -81,6 +81,28 @@ function Install-VSCode {
             Remove-Item $installerPath -Force
         }
         Write-Host "Visual Studio Code installation completed successfully!" -ForegroundColor Green
+
+        # Install required VS Code extensions
+        $extensions = @(
+            "modelharbor.modelharbor-agent",
+            "ms-dotnettools.vscode-dotnet-runtime",
+            "formulahendry.dotnet",
+            "ms-dotnettools.csharp",
+            "ms-dotnettools.csdevkit",
+            "ms-dotnettools.vscodeintellicode-csharp",
+            "alexcvzz.vscode-sqlite"
+        )
+
+        foreach ($ext in $extensions) {
+            Write-Host "Installing $ext extension..." -ForegroundColor Cyan
+            try {
+                code --install-extension $ext
+                Write-Host "$ext extension installed successfully!" -ForegroundColor Green
+            }
+            catch {
+                Write-Warning "Failed to install $ext extension: $($_.Exception.Message)"
+            }
+        }
     }
     catch {
         Write-Error "Failed to install Visual Studio Code: $($_.Exception.Message)"
@@ -191,45 +213,162 @@ function Install-PowerShell7 {
     }
 }
 
-# Function to install PostgreSQL 17
-function Install-PostgreSQL17 {
-    Write-Host "Installing PostgreSQL 17..." -ForegroundColor Green
-    
-    # Check if PostgreSQL is already installed
-    try {
-        $pgServices = Get-Service -Name "postgresql*" -ErrorAction SilentlyContinue
-        if ($pgServices) {
-            Write-Host "PostgreSQL is already installed (services found: $($pgServices.Name -join ', ')))" -ForegroundColor Yellow
-            return
-        }
+# Function to install Docker Desktop
+function Install-DockerDesktop {
+    Write-Host "Installing Docker Desktop..." -ForegroundColor Green
+
+    # Check if Docker Desktop is already installed
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        Write-Host "Docker Desktop is already installed" -ForegroundColor Yellow
+        return
     }
-    catch {
-        Write-Host "Unable to check PostgreSQL installation status" -ForegroundColor Yellow
-    }
-    
+
     try {
-        # Download and install PostgreSQL 17 using winget (if available) or directly
+        # Install Docker Desktop using winget (if available) or Chocolatey or directly
         if (Get-Command winget -ErrorAction SilentlyContinue) {
-            Write-Host "Installing PostgreSQL 17 via winget..." -ForegroundColor Cyan
-            winget install --id=PostgreSQL.PostgreSQL -e --source=winget --accept-source-agreements --accept-package-agreements --force
+            Write-Host "Installing Docker Desktop via winget..." -ForegroundColor Cyan
+            winget install --id=Microsoft.DockerDesktop -e --source=winget --accept-source-agreements --accept-package-agreements --force
+        }
+        elseif (Get-Command choco -ErrorAction SilentlyContinue) {
+            Write-Host "Installing Docker Desktop via Chocolatey..." -ForegroundColor Cyan
+            choco install docker-desktop -y --force
         }
         else {
-            # URL for PostgreSQL 17 installer
-            $downloadUrl = "https://get.enterprisedb.com/postgresql/postgresql-17.0-1-windows-x64.exe"
-            $installerPath = "$env:TEMP\PostgreSQLSetup.exe"
-            
-            Write-Host "Downloading PostgreSQL 17 installer..." -ForegroundColor Cyan
+            # URL for Docker Desktop installer
+            $downloadUrl = "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
+            $installerPath = "$env:TEMP\DockerDesktopInstaller.exe"
+
+            Write-Host "Downloading Docker Desktop installer..." -ForegroundColor Cyan
             Invoke-WebRequest -Uri $downloadUrl -OutFile $installerPath -ErrorAction Stop
-            
-            Write-Host "Installing PostgreSQL 17..." -ForegroundColor Cyan
-            Start-Process -FilePath $installerPath -ArgumentList "--mode", "unattended", "--unattendedmodeui", "none" -Wait -NoNewWindow
-            
+
+            Write-Host "Installing Docker Desktop..." -ForegroundColor Cyan
+            Start-Process -FilePath $installerPath -ArgumentList "install", "--quiet" -Wait -NoNewWindow
+
             Remove-Item $installerPath -Force
         }
-        Write-Host "PostgreSQL 17 installation completed successfully!" -ForegroundColor Green
+        Write-Host "Docker Desktop installation completed successfully!" -ForegroundColor Green
+
+        # Configure Docker Desktop settings
+        Write-Host "Configuring Docker Desktop settings..." -ForegroundColor Cyan
+        try {
+            $settingsPath = "$env:APPDATA\Docker Desktop\settings.json"
+            if (Test-Path $settingsPath) {
+                $settings = Get-Content $settingsPath | ConvertFrom-Json
+                # Set memory to 2GB
+                $settings.memoryMiB = 2048
+                # Set CPUs to all available
+                $cpuCount = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors
+                $settings.cpus = $cpuCount
+                # Set swap to 1GB
+                $settings.swapMiB = 1024
+                # Save back
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $settingsPath
+                Write-Host "Docker Desktop settings configured." -ForegroundColor Green
+            } else {
+                Write-Warning "Docker Desktop settings file not found."
+            }
+        } catch {
+            Write-Warning "Failed to configure Docker Desktop settings: $($_.Exception.Message)"
+        }
+
+        # Enable Docker Desktop to start on Windows boot
+        Write-Host "Enabling Docker Desktop to start on Windows boot..." -ForegroundColor Cyan
+        try {
+            $dockerPath = "${env:ProgramFiles}\Docker\Docker\Docker Desktop.exe"
+            if (Test-Path $dockerPath) {
+                reg add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" /v "Docker Desktop" /t REG_SZ /d "\"$dockerPath\"" /f | Out-Null
+                Write-Host "Docker Desktop will start on boot." -ForegroundColor Green
+            } else {
+                Write-Warning "Docker Desktop executable not found at expected path."
+            }
+        } catch {
+            Write-Warning "Failed to enable Docker Desktop on boot: $($_.Exception.Message)"
+        }
+
+        # Start Docker Desktop (minimized to prevent opening dashboard)
+        Write-Host "Starting Docker Desktop..." -ForegroundColor Cyan
+        try {
+            Start-Process -FilePath "$dockerPath" -ArgumentList "--minimized"
+            Write-Host "Docker Desktop started (minimized)." -ForegroundColor Green
+        } catch {
+            Write-Warning "Failed to start Docker Desktop: $($_.Exception.Message)"
+        }
+
+        # Wait for Docker to be ready and pull image
+        Write-Host "Waiting for Docker to be ready..." -ForegroundColor Cyan
+        $maxRetries = 10
+        $retryCount = 0
+        $dockerReady = $false
+        while ($retryCount -lt $maxRetries -and !$dockerReady) {
+            try {
+                docker ps 2>$null | Out-Null
+                $dockerReady = $true
+            } catch {
+                $retryCount++
+                Start-Sleep -Seconds 5
+            }
+        }
+        if (!$dockerReady) {
+            Write-Warning "Docker did not start within expected time. Skipping image pull."
+        } else {
+            Write-Host "Pulling pgvector/pgvector:pg17 image..." -ForegroundColor Cyan
+            try {
+                docker pull pgvector/pgvector:pg17
+                Write-Host "Image pgvector/pgvector:pg17 pulled successfully." -ForegroundColor Green
+            } catch {
+                Write-Warning "Failed to pull image: $($_.Exception.Message)"
+            }
+        }
     }
     catch {
-        Write-Error "Failed to install PostgreSQL 17: $($_.Exception.Message)"
+        Write-Error "Failed to install Docker Desktop: $($_.Exception.Message)"
+    }
+}
+
+# Function to install Ngrok
+function Install-Ngrok {
+    Write-Host "Installing Ngrok..." -ForegroundColor Green
+
+    # Check if Ngrok is already installed
+    if (Get-Command ngrok -ErrorAction SilentlyContinue) {
+        Write-Host "Ngrok is already installed" -ForegroundColor Yellow
+        return
+    }
+
+    try {
+        # Install Ngrok using winget (if available) or Chocolatey or directly
+        if (Get-Command winget -ErrorAction SilentlyContinue) {
+            Write-Host "Installing Ngrok via winget..." -ForegroundColor Cyan
+            winget install --id=ngrok.ngrok -e --source=winget --accept-source-agreements --accept-package-agreements --force
+        }
+        elseif (Get-Command choco -ErrorAction SilentlyContinue) {
+            Write-Host "Installing Ngrok via Chocolatey..." -ForegroundColor Cyan
+            choco install ngrok -y --force
+        }
+        else {
+            # URL for Ngrok zip
+            $downloadUrl = "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip"
+            $zipPath = "$env:TEMP\ngrok.zip"
+            $extractPath = "$env:USERPROFILE\ngrok"
+
+            Write-Host "Downloading Ngrok..." -ForegroundColor Cyan
+            Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath -ErrorAction Stop
+
+            Write-Host "Extracting Ngrok..." -ForegroundColor Cyan
+            if (!(Test-Path $extractPath)) {
+                New-Item -ItemType Directory -Path $extractPath -Force
+            }
+            Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
+
+            # Add to PATH for the session
+            $env:PATH += ";$extractPath"
+
+            Remove-Item $zipPath -Force
+        }
+        Write-Host "Ngrok installation completed successfully!" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Failed to install Ngrok: $($_.Exception.Message)"
     }
 }
 
@@ -257,6 +396,8 @@ Install-Git
 Install-WindowsTerminal
 Install-PowerShell7
 Install-PostgreSQL17
+Install-DockerDesktop
+Install-Ngrok
 
 Write-Host "========================================" -ForegroundColor Magenta
 Write-Host "Development Environment Setup Complete!" -ForegroundColor Magenta
