@@ -91,13 +91,6 @@ public static class DependencyInjection
         services.AddScoped<ApplicationDbContextInitialiser>();
         services.AddMemoryCache();
 
-        string? redisConnection = configuration.GetConnectionString("Redis");
-        Guard.Against.Null(redisConnection, message: "RedisConnection not found.");
-        services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = redisConnection;
-            options.InstanceName = "chatbotapi";
-        });
         services.AddScoped<IOpenAiService, ModelHarborApiService>();
         services.AddScoped<ILineMessenger, LineMessagingApi>();
         // Removed GoogleSheetHelper from DI as it is now instantiated directly where needed.

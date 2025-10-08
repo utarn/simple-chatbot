@@ -13,7 +13,7 @@ ChatBot API is a comprehensive .NET 8 chatbot framework that supports multiple m
 - **File Management**: Upload, store, and search files with AI-powered descriptions
 - **Contact Management**: Organize and associate files with contacts
 - **Database Integration**: PostgreSQL with Entity Framework Core
-- **Caching**: Redis distributed caching support
+- **Caching**: In-memory caching support
 - **Authentication**: Identity-based authentication system
 
 ## Architecture
@@ -47,7 +47,6 @@ ChatBot API is a comprehensive .NET 8 chatbot framework that supports multiple m
 
 #### Caching & Performance
 - **`IMemoryCache`**: In-memory caching for session data
-- **`IDistributedCache`**: Distributed caching (Redis) with `IDistributedCacheExtension`
 
 #### Background Services
 - **`FetchEmailBackgroundService`**: Reads Gmail and pushes to processing queue
@@ -85,7 +84,6 @@ The system uses an **auto-discovery plugin architecture** where processors are a
 - **ASP.NET Core MVC**: Web framework for UI and API
 - **Entity Framework Core**: Object-relational mapping
 - **PostgreSQL**: Primary database with vector extensions (pgvector)
-- **Redis**: Distributed caching
 - **OpenAI API**: LLM integrations and embeddings
 - **LINE Messaging API**: LINE Bot functionality
 - **Facebook Graph API**: Messenger Bot functionality
@@ -96,7 +94,6 @@ The system uses an **auto-discovery plugin architecture** where processors are a
 
 - .NET 8 SDK
 - PostgreSQL database
-- Redis (optional, for caching)
 - OpenAI API key
 - LINE Channel Access Token (for LINE Bot)
 - Facebook App credentials (for Messenger Bot)

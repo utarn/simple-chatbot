@@ -7,7 +7,6 @@ services:
       - "8003:80"
     depends_on:
       - database
-      - redis
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: "http://+:80"
@@ -22,23 +21,5 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:latest
-    restart: always
-    volumes:
-      - redis_data:/data
-
-  seq:
-    image: datalust/seq:latest
-    restart: always
-    environment:
-      ACCEPT_EULA: "Y"
-    ports:
-      - "8080:80"   # Seq UI port
-    volumes:
-      - seq_data:/data
-
 volumes:
   db_data:
-  redis_data:
-  seq_data:

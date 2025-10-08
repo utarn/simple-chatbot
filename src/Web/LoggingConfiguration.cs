@@ -46,8 +46,9 @@ internal static class LoggingConfiguration
                 .Destructure.ToMaximumDepth(4)
                 .Destructure.ToMaximumStringLength(512)
                 .Destructure.ToMaximumCollectionCount(10)
-                .WriteTo.Seq(serverUrl: hostname, apiKey: apiKey)
-                .WriteTo.Async(configure => configure.Console());
+                // .WriteTo.Seq(serverUrl: hostname, apiKey: apiKey)
+                .WriteTo.Async(configure => configure.Console())
+                .WriteTo.Async(configure => configure.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
 #else
             configuration
                 .MinimumLevel.Information()
@@ -63,8 +64,9 @@ internal static class LoggingConfiguration
                 .Destructure.ToMaximumDepth(4)
                 .Destructure.ToMaximumStringLength(512)
                 .Destructure.ToMaximumCollectionCount(10)
-                .WriteTo.Seq(serverUrl: hostname, apiKey: apiKey)
-                .WriteTo.Async(configure => configure.Console());
+                // .WriteTo.Seq(serverUrl: hostname, apiKey: apiKey)
+                .WriteTo.Async(configure => configure.Console())
+                .WriteTo.Async(configure => configure.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
 
 #endif
             if (context.HostingEnvironment.EnvironmentName.ToLower().Contains("Staging"))
