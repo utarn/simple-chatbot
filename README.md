@@ -84,12 +84,12 @@
 เมื่อมีการเปลี่ยนแปลงใน Entity หรือ Database Schema ให้สร้าง Migration ดังนี้:
 
 ```bash
-dotnet ef migrations add <MigrationName> --project src/Web/Web.csproj --startup-project src/Web/Web.csproj
+dotnet ef migrations add <MigrationName> --project src/Infrastructure/Infrastructure.csproj --startup-project src/Web/Web.csproj
 ```
 
 ตัวอย่าง:
 ```bash
-dotnet ef migrations add InitialCreate --project src/Web/Web.csproj --startup-project src/Web/Web.csproj
+dotnet ef migrations add InitialCreate --project src/Infrastructure/Infrastructure.csproj --startup-project src/Web/Web.csproj
 ```
 
 ### การอัปเดตฐานข้อมูล

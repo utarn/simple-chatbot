@@ -41,9 +41,60 @@ ChatBot API is a comprehensive .NET 8 chatbot framework that supports multiple m
 - **`IPostProcessor`**: Handles post-processing of messages and events
 
 #### External Integrations
-- **`IOpenAiService`**: LLM chat completions and embeddings, it use default model name and api key from a chatbot
+- **`IOpenAiService`**: Low-level OpenAI API wrapper for direct API calls with custom requests
+- **`IChatCompletion`**: High-level chat completion service with vector search and context management
 - **`IGmailService`**: Gmail operations and email management
 - **`ICalendarService`**: Google Calendar operations and booking
+
+#### OpenAI Service Interface Comparison
+
+**`IOpenAiService` vs `IChatCompletion`**
+
+When working with OpenAI functionality in this chatbot framework, it's important to understand the distinction between these two interfaces:
+
+**`IOpenAiService`** - Low-Level API Wrapper
+- **Purpose**: Direct OpenAI API calls with minimal abstraction
+- **Use Cases**:
+  - Custom OpenAI requests (images, base64, special formats)
+  - Text embeddings for vector search
+  - File processing and text chunking
+  - HTML content extraction
+  - Model listing and management
+- **Key Methods**:
+  - `GetOpenAiResponseAsync()` - Direct chat completion calls
+  - `CallEmbeddingsAsync()` - Generate text embeddings
+  - `GetTextChunksFromFileAsync()` - Process files into text chunks
+  - `CallSummaryAsync()` - Generate file summaries
+  - `GetHtmlContentAsync()` - Extract content from web pages
+- **When to Use**: In custom processors when you need direct API access or specialized OpenAI functionality
+
+**`IChatCompletion`** - High-Level Chat Service
+- **Purpose**: Complete chat completion workflow with vector search and context management
+- **Implementation**: Only implemented by `VectorChatService`
+- **Use Cases**:
+  - Standard chatbot conversations
+  - Vector-based document retrieval
+  - Message history management
+  - Context-aware responses with references
+- **Key Features**:
+  - Automatic vector search for relevant documents
+  - Message history tracking
+  - Pre/post-processor integration
+  - Reference item generation
+  - Context management with Thai date/time
+- **When to Use**: In webhook handlers and main chatbot flows
+
+**Decision Guidelines**:
+- ✅ **Use `IChatCompletion`** for standard chatbot conversations in webhook handlers
+- ✅ **Use `IOpenAiService`** in custom processors for specialized OpenAI functionality
+- ❌ **Don't use `IChatCompletion`** in processors (as noted in interface comments)
+- ❌ **Don't use `IOpenAiService`** directly for standard chatbot conversations (missing vector search)
+
+**Architecture Pattern**:
+```
+Webhook Commands → IChatCompletion → VectorChatService → IOpenAiService
+Custom Processors → IOpenAiService → ModelHarborApiService
+```
 
 #### Caching & Performance
 - **`IMemoryCache`**: In-memory caching for session data
