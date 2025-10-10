@@ -1,1 +1,0 @@
-PluginAttribute.cs ไม่จำเป็นอีกต่อไป เนื่องจากเปลี่ยนมาใช้ class name pattern และ properties แทน
